@@ -12,6 +12,7 @@ import SwiftUI
 struct FrameView: View {
   @State var initialPosition: SIMD3<Float>? = nil
   @State var initialScale: SIMD3<Float>? = nil
+  @State var initialRotation: simd_quatf? = nil
 
   var body: some View {
     RealityView { content in
@@ -20,7 +21,8 @@ struct FrameView: View {
 
       // Load the model
       guard
-        let frame = try? await Entity(named: modelName, in: realityKitContentBundle)
+        let frame = try? await Entity(
+          named: modelName, in: realityKitContentBundle)
       else {
         assertionFailure("Failed to load model: \(modelName)")
         return
@@ -37,12 +39,31 @@ struct FrameView: View {
 
       // Add frame to the view
       content.add(frame)
-    }.gesture(translationGesture).gesture(scaleGesture).gesture(tapGesture)
+    }.gesture(translationGesture).gesture(rotationGesture)
   }
-  
-  var tapGesture: some Gesture {
-    TapGesture().targetedToAnyEntity().onEnded({ _ in
-      print("Tapped!")
+
+  var rotationGesture: some Gesture {
+    RotateGesture3D().targetedToAnyEntity().onChanged({ gesture in
+      // Get the entity.
+      let rootEntity = gesture.entity
+
+      // Mark the current rotation at the start of the gesture.
+      if initialRotation == nil {
+        initialRotation = rootEntity.transform.rotation
+      }
+      
+      // Extract angle and axis.
+      let axis = gesture.rotation.axis
+      let angle = gesture.rotation.angle
+      
+      // Flip the X and Z rotations.
+      let flippedRotation = Rotation3D(angle: angle, axis: RotationAxis3D(x: -axis.x, y: axis.y, z: -axis.z))
+
+      // Apply to entity.
+      rootEntity.transform.rotation = simd_quatf(
+        Rotation3D(initialRotation ?? .init()).rotated(by: flippedRotation))
+    }).onEnded({ _ in
+      initialRotation = nil
     })
   }
 

@@ -158,5 +158,10 @@ def Xform "Root"
             }
         }
     }
+
+    def RealityKitComponent "InputTarget"
+    {
+        uniform token info:id = "RealityKit.InputTarget"
+    }
 }
 
