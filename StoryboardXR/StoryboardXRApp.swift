@@ -10,24 +10,32 @@ import SwiftUI
 @main
 struct StoryboardXRApp: App {
 
-    @State private var appModel = AppModel()
+  @State private var appModel = AppModel()
 
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-                .environment(appModel)
-        }
+  var body: some Scene {
+    WindowGroup {
+      switch appModel.featureMode {
+      case .switcher:
+        SwitcherView().environment(appModel)
+      case .storyboard:
+        StoryboardView().environment(appModel)
+      case .handTracking:
+        HandTrackingView().environment(appModel)
+      case .blocking:
+        BlockingView().environment(appModel)
+      }
+    }
 
-        ImmersiveSpace(id: appModel.immersiveSpaceID) {
-            ImmersiveView()
-                .environment(appModel)
-                .onAppear {
-                    appModel.immersiveSpaceState = .open
-                }
-                .onDisappear {
-                    appModel.immersiveSpaceState = .closed
-                }
+    ImmersiveSpace(id: appModel.immersiveSpaceID) {
+      ImmersiveView()
+        .environment(appModel)
+        .onAppear {
+          appModel.immersiveSpaceState = .open
         }
-        .immersionStyle(selection: .constant(.mixed), in: .mixed)
-     }
+        .onDisappear {
+          appModel.immersiveSpaceState = .closed
+        }
+    }
+    .immersionStyle(selection: .constant(.mixed), in: .mixed)
+  }
 }
