@@ -30,14 +30,20 @@ struct FrameView: View {
       let bounds = frame.visualBounds(relativeTo: nil)
 
       // Spawn 1.5m off the ground
-      frame.position.y = 1.5
+      frame.position.y = 1
 
       // Spawn somewhere in the visual bounds.
       frame.position.z -= bounds.boundingRadius
 
       // Add frame to the view
       content.add(frame)
-    }.gesture(translationGesture).gesture(scaleGesture)
+    }.gesture(translationGesture).gesture(scaleGesture).gesture(tapGesture)
+  }
+  
+  var tapGesture: some Gesture {
+    TapGesture().targetedToAnyEntity().onEnded({ _ in
+      print("Tapped!")
+    })
   }
 
   var translationGesture: some Gesture {
