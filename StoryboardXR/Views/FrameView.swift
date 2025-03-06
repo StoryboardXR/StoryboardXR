@@ -39,6 +39,7 @@ struct FrameView: View {
 
       // Add frame to the view
       content.add(frame)
+      content.add(frame.clone(recursive: false))
     }.gesture(translationGesture).gesture(rotationGesture)
   }
 
@@ -51,13 +52,14 @@ struct FrameView: View {
       if initialRotation == nil {
         initialRotation = rootEntity.transform.rotation
       }
-      
+
       // Extract angle and axis.
       let axis = gesture.rotation.axis
       let angle = gesture.rotation.angle
-      
+
       // Flip the X and Z rotations.
-      let flippedRotation = Rotation3D(angle: angle, axis: RotationAxis3D(x: -axis.x, y: axis.y, z: -axis.z))
+      let flippedRotation = Rotation3D(
+        angle: angle, axis: RotationAxis3D(x: -axis.x, y: axis.y, z: -axis.z))
 
       // Apply to entity.
       rootEntity.transform.rotation = simd_quatf(
