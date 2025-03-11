@@ -82,6 +82,15 @@
     "objectMetadataList" : [
       [
         "96567654-99AA-4218-B01D-5E21DFF0B125",
+        "Root",
+        "Top"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "96567654-99AA-4218-B01D-5E21DFF0B125",
         "Root"
       ],
       {

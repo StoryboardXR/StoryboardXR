@@ -11,6 +11,7 @@ import SwiftUI
 
 struct FrameView: View {
   @State var initialPosition: SIMD3<Float>? = nil
+  @State var initialUserPosition: SIMD3<Float>? = nil
   @State var initialScale: SIMD3<Float>? = nil
   @State var initialRotation: simd_quatf? = nil
 
@@ -74,19 +75,28 @@ struct FrameView: View {
       // Get the entity.
       let rootEntity = value.entity
 
+      // Compute the headset placement.
+      let currentUserPosition: SIMD3<Float> = value.convert(
+        Vector3D.zero, from: .local, to: .scene)
+
       // Mark the current position at the start of the drag.
       if initialPosition == nil {
         initialPosition = rootEntity.position
+        initialUserPosition = currentUserPosition
       }
+      
+      // Compute user movement.
+      let userMovement = (initialUserPosition ?? .zero) - currentUserPosition
 
       // Get the drag movement from world space to scene space.
       let drag = value.convert(value.translation3D, from: .global, to: .scene)
 
       // Apply the translation.
-      rootEntity.position = (initialPosition ?? .zero) + drag
+      rootEntity.position = (initialPosition ?? .zero) + drag - userMovement
     }).onEnded({ _ in
       // Reset the initial position value for the next darg.
       initialPosition = nil
+      initialUserPosition = nil
     })
   }
 
