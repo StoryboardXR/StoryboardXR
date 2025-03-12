@@ -26,5 +26,5 @@ class AppModel {
     case handTracking
     case blocking
   }
-  var featureMode: FeatureMode = .switcher
+  var featureMode: FeatureMode = .storyboard
 }

@@ -25,17 +25,8 @@ struct StoryboardXRApp: App {
         BlockingView().environment(appModel)
       }
     }
-
-    ImmersiveSpace(id: appModel.immersiveSpaceID) {
-      ImmersiveView()
-        .environment(appModel)
-        .onAppear {
-          appModel.immersiveSpaceState = .open
-        }
-        .onDisappear {
-          appModel.immersiveSpaceState = .closed
-        }
-    }
-    .immersionStyle(selection: .constant(.mixed), in: .mixed)
+    ImmersiveSpace(id: "FrameView") {
+      FrameView()
+    }.immersionStyle(selection: .constant(.mixed), in: .mixed)
   }
 }
