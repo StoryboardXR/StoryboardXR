@@ -10,6 +10,7 @@ import RealityKitContent
 import SwiftUI
 
 struct FrameView: View {
+  /// Gesture start markers.
   @State var initialPosition: SIMD3<Float>? = nil
   @State var initialUserPosition: SIMD3<Float>? = nil
   @State var initialScale: SIMD3<Float>? = nil
@@ -17,15 +18,12 @@ struct FrameView: View {
 
   var body: some View {
     RealityView { content in
-      // Frame model name.
-      let modelName: String = "Frame"
-
-      // Load the model
+      // Load the model.
       guard
         let frame = try? await Entity(
-          named: modelName, in: realityKitContentBundle)
+          named: "Frame", in: realityKitContentBundle)
       else {
-        assertionFailure("Failed to load model: \(modelName)")
+        assertionFailure("Failed to load frame model")
         return
       }
 
@@ -38,12 +36,12 @@ struct FrameView: View {
       // Spawn somewhere in the visual bounds.
       frame.position.z -= bounds.boundingRadius
 
-      // Add frame to the view
+      // Add frame to the view.
       content.add(frame)
-      content.add(frame.clone(recursive: false))
     }.gesture(translationGesture).gesture(rotationGesture)
   }
 
+  /// Frame rotation.
   var rotationGesture: some Gesture {
     RotateGesture3D().targetedToAnyEntity().onChanged({ gesture in
       // Get the entity.
@@ -70,13 +68,14 @@ struct FrameView: View {
     })
   }
 
+  /// Frame translation.
   var translationGesture: some Gesture {
-    DragGesture().targetedToAnyEntity().onChanged({ value in
+    DragGesture().targetedToAnyEntity().onChanged({ gesture in
       // Get the entity.
-      let rootEntity = value.entity
+      let rootEntity = gesture.entity
 
       // Compute the headset placement.
-      let currentUserPosition: SIMD3<Float> = value.convert(
+      let currentUserPosition: SIMD3<Float> = gesture.convert(
         Vector3D.zero, from: .local, to: .scene)
 
       // Mark the current position at the start of the drag.
@@ -89,7 +88,7 @@ struct FrameView: View {
       let userMovement = (initialUserPosition ?? .zero) - currentUserPosition
 
       // Get the drag movement from world space to scene space.
-      let drag = value.convert(value.translation3D, from: .global, to: .scene)
+      let drag = gesture.convert(gesture.translation3D, from: .global, to: .scene)
 
       // Apply the translation.
       rootEntity.position = (initialPosition ?? .zero) + drag - userMovement
@@ -100,6 +99,7 @@ struct FrameView: View {
     })
   }
 
+  /// Frame scaling.
   var scaleGesture: some Gesture {
     MagnifyGesture().targetedToAnyEntity().onChanged({ gesture in
       // Get the entity.
