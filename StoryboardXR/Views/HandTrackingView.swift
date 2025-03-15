@@ -6,9 +6,12 @@
 //
 
 import SwiftUI
+import RealityKit
+import RealityKitContent
 
 struct HandTrackingView: View {
   @Environment(AppModel.self) private var appModel
+    @StateObject var model = HandTrackingViewMOdel()
   var body: some View {
     VStack {
       Text("Hand Tracking View").font(.title)
@@ -16,6 +19,15 @@ struct HandTrackingView: View {
         appModel.featureMode = .switcher
       }
     }.padding()
+      
+      RealityView{ content in
+      } .task{
+          
+      } .task{
+          
+      } .task{
+          
+      }
   }
 }
 

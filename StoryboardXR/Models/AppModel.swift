@@ -27,4 +27,5 @@ class AppModel {
     case blocking
   }
   var featureMode: FeatureMode = .switcher
+    var featureMode: FeatureMode = .switcher
 }

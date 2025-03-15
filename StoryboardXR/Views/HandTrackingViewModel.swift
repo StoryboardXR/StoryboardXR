@@ -1,19 +1,32 @@
 //
-//  HandTracking.swift
+//  HandTrackingViewModel.swift
 //  StoryboardXR
 //
-//  Created by Dalton Brockett on 3/4/25.
+//  Created by Dalton Brockett on 3/5/25.
 //
-// testing setup
-
 // Privacy
 // Authorization
 import RealityKit
 import ARKit
 import RealityKitContent
+import SwiftUI
 
+@MainActor class HandTrackingViewModel: ObservableObject {
+    private let session = ARKitSession()
+    private let handTracking = HandTrackingProvider()
+    private let sceneReconstruction = SceneReconstructionProvider()
+    
+    private var contentEntity = Entity()
+    
+    private let meshEntities = [UUID : ModelEntity]()
+    
+    private let fingerEntities: [HandAnchor.Chirality : ModelEntity] = [
+        .left: .createFingertip()
+    ]
+    
+}
 
-@MainActor class 
+/*
 private let session = ARKitSession()
 
 Task {
@@ -32,3 +45,4 @@ Task {
         }
     }
 }
+*/
