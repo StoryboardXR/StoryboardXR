@@ -38,7 +38,12 @@ struct ShotRealityView: View {
 
       // Add frame to the view.
       content.add(shotEntity)
-    }.gesture(translationGesture).gesture(rotationGesture)
+    }
+    .gesture(
+      translationGesture
+        .simultaneously(with: rotationGesture)
+        .simultaneously(with: scaleGesture)
+    )
   }
 
   /// Shot angle.
@@ -83,12 +88,13 @@ struct ShotRealityView: View {
         initialPosition = rootEntity.position
         initialUserPosition = currentUserPosition
       }
-      
+
       // Compute user movement.
       let userMovement = (initialUserPosition ?? .zero) - currentUserPosition
 
       // Get the drag movement from world space to scene space.
-      let drag = gesture.convert(gesture.translation3D, from: .global, to: .scene)
+      let drag = gesture.convert(
+        gesture.translation3D, from: .global, to: .scene)
 
       // Apply the translation.
       rootEntity.position = (initialPosition ?? .zero) + drag - userMovement
