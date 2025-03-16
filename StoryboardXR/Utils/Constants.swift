@@ -6,6 +6,7 @@
 //
 
 let STORYBOARD_SPACE_ID = "StoryboardSpace"
+let SHOT_CONTROL_PANEL_ATTACHMENT_ID = "ShotControlPanelAttachment"
 
 /// Shot identifying name.
 enum ShotName: String, CaseIterable, CustomStringConvertible, Identifiable {

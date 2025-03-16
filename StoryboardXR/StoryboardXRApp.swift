@@ -28,7 +28,7 @@ struct StoryboardXRApp: App {
     }
 
     ImmersiveSpace(id: STORYBOARD_SPACE_ID) {
-      ShotRealityView()
+      ShotRealityView().environment(appModel)
     }
     .immersionStyle(selection: .constant(.mixed), in: .mixed)
   }

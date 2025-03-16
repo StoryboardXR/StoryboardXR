@@ -22,6 +22,4 @@ class AppModel {
   
   // MARK: Instance state.
   var sceneNumber = 1
-  
-  // MARK:
 }

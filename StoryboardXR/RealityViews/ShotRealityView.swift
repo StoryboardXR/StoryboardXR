@@ -10,14 +10,19 @@ import RealityKitContent
 import SwiftUI
 
 struct ShotRealityView: View {
-  /// Gesture start markers.
+  // MARK: Environment.
+  @Environment(AppModel.self) private var appModel
+
+  // MARK: Gesture start markers.
   @State var initialPosition: SIMD3<Float>? = nil
   @State var initialUserPosition: SIMD3<Float>? = nil
   @State var initialScale: SIMD3<Float>? = nil
   @State var initialRotation: simd_quatf? = nil
 
   var body: some View {
-    RealityView { content in
+    RealityView { content, attachments in
+      // MARK: Load the shot frame model.
+
       // Load the entity.
       guard
         let shotEntity = try? await Entity(
@@ -36,8 +41,21 @@ struct ShotRealityView: View {
       // Spawn somewhere in the visual bounds.
       shotEntity.position.z -= bounds.boundingRadius
 
-      // Add frame to the view.
+      // Add entity to the view.
       content.add(shotEntity)
+
+      // MARK: Add control panel.
+      if let controlPanelAttachment = attachments.entity(
+        for: SHOT_CONTROL_PANEL_ATTACHMENT_ID)
+      {
+        shotEntity.addChild(controlPanelAttachment)
+
+        controlPanelAttachment.setPosition([1, 0, 0], relativeTo: shotEntity)
+      }
+    } attachments: {
+      Attachment(id: SHOT_CONTROL_PANEL_ATTACHMENT_ID) {
+        ShotControlPanelView(dataIndex: 0).environment(appModel)
+      }
     }
     .gesture(
       translationGesture
