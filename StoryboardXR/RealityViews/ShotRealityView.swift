@@ -1,5 +1,5 @@
 //
-//  FrameView.swift
+//  ShotRealityView.swift
 //  StoryboardXR
 //
 //  Created by Kenneth Yang on 3/5/25.
@@ -9,7 +9,7 @@ import RealityKit
 import RealityKitContent
 import SwiftUI
 
-struct FrameView: View {
+struct ShotRealityView: View {
   /// Gesture start markers.
   @State var initialPosition: SIMD3<Float>? = nil
   @State var initialUserPosition: SIMD3<Float>? = nil
@@ -18,30 +18,30 @@ struct FrameView: View {
 
   var body: some View {
     RealityView { content in
-      // Load the model.
+      // Load the entity.
       guard
-        let frame = try? await Entity(
-          named: "Frame", in: realityKitContentBundle)
+        let shotEntity = try? await Entity(
+          named: "Shot", in: realityKitContentBundle)
       else {
         assertionFailure("Failed to load frame model")
         return
       }
 
       // Get the model bounds.
-      let bounds = frame.visualBounds(relativeTo: nil)
+      let bounds = shotEntity.visualBounds(relativeTo: nil)
 
       // Spawn 1.5m off the ground
-      frame.position.y = 1
+      shotEntity.position.y = 1
 
       // Spawn somewhere in the visual bounds.
-      frame.position.z -= bounds.boundingRadius
+      shotEntity.position.z -= bounds.boundingRadius
 
       // Add frame to the view.
-      content.add(frame)
+      content.add(shotEntity)
     }.gesture(translationGesture).gesture(rotationGesture)
   }
 
-  /// Frame rotation.
+  /// Shot angle.
   var rotationGesture: some Gesture {
     RotateGesture3D().targetedToAnyEntity().onChanged({ gesture in
       // Get the entity.
@@ -68,7 +68,7 @@ struct FrameView: View {
     })
   }
 
-  /// Frame translation.
+  /// Shot placement.
   var translationGesture: some Gesture {
     DragGesture().targetedToAnyEntity().onChanged({ gesture in
       // Get the entity.
@@ -99,7 +99,7 @@ struct FrameView: View {
     })
   }
 
-  /// Frame scaling.
+  /// Shot frame scaling.
   var scaleGesture: some Gesture {
     MagnifyGesture().targetedToAnyEntity().onChanged({ gesture in
       // Get the entity.
@@ -121,8 +121,4 @@ struct FrameView: View {
       initialScale = nil
     })
   }
-}
-
-#Preview {
-  FrameView()
 }
