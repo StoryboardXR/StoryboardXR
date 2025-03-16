@@ -39,14 +39,16 @@ struct HandTrackingSystem: System {
 
         // Start to collect each hand-tracking anchor.
         for await anchorUpdate in handTracking.anchorUpdates {
-            // Check whether the anchor is on the left or right hand.
-            switch anchorUpdate.anchor.chirality {
+            let anchor = anchorUpdate.anchor
+
+            switch anchor.chirality {
             case .left:
-                self.latestLeftHand = anchorUpdate.anchor
+                self.latestLeftHand = anchor
             case .right:
-                self.latestRightHand = anchorUpdate.anchor
+                self.latestRightHand = anchor
             }
         }
+
     }
     
     /// The query this system uses to find all entities with the hand-tracking component.
@@ -58,7 +60,6 @@ struct HandTrackingSystem: System {
         let handEntities = context.entities(matching: Self.query, updatingSystemWhen: .rendering)
 
         for entity in handEntities {
-            print("do these even existtttttt" + entity.name)
             guard var handComponent = entity.components[HandTrackingComponent.self] else { continue }
 
             // Set up the finger joint entities if you haven't already.
@@ -98,7 +99,7 @@ struct HandTrackingSystem: System {
         let radius: Float = 0.01
 
         /// The material to apply to the sphere entity.
-        let material = SimpleMaterial(color: .black, isMetallic: false)
+        let material = SimpleMaterial(color: .purple, isMetallic: false)
 
         /// The sphere entity that represents a joint in a hand.
         let sphereEntity = ModelEntity(
@@ -110,9 +111,11 @@ struct HandTrackingSystem: System {
         for bone in Hand.joints {
             // Add a duplication of the sphere entity to the hand entity.
             let newJoint = sphereEntity.clone(recursive: false)
+            print(newJoint.name)
             handEntity.addChild(newJoint)
 
             // Attach the sphere to the finger.
+            print(bone.0)
             handComponent.fingers[bone.0] = newJoint
         }
 

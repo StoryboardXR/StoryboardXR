@@ -20,7 +20,7 @@ struct StoryboardXRApp: App {
       case .storyboard:
         StoryboardView().environment(appModel)
       case .handTracking:
-        HandTrackingView().environment(appModel)
+        MainHandTrackingView().environment(appModel)
       case .blocking:
         BlockingView().environment(appModel)
       }
