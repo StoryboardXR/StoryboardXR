@@ -26,7 +26,11 @@ struct StoryboardXRApp: App {
       }
     }
     ImmersiveSpace(id: "FrameView") {
-      FrameView()
+        FrameView()
     }.immersionStyle(selection: .constant(.mixed), in: .mixed)
+      
+    ImmersiveSpace(id: "HandTrackingView"){
+        HandTrackingView()
+    }
   }
 }

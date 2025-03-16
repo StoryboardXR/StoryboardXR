@@ -7,30 +7,39 @@
 
 import SwiftUI
 import RealityKit
-import RealityKitContent
+import ARKit
 
+/// A reality view that contains all hand-tracking entities.
 struct HandTrackingView: View {
-  @Environment(AppModel.self) private var appModel
-    @StateObject var model = HandTrackingViewMOdel()
-  var body: some View {
-    VStack {
-      Text("Hand Tracking View").font(.title)
-      Button("Switcher") {
-        appModel.featureMode = .switcher
-      }
-    }.padding()
-      
-      RealityView{ content in
-      } .task{
-          
-      } .task{
-          
-      } .task{
-          
-      }
-  }
+    /// The main body of the view.
+    @Environment(AppModel.self) private var appModel
+    @Environment(\.openImmersiveSpace) var openImmersiveSpace
+    @Environment(\.dismissImmersiveSpace) var dismissImmersiveSpace
+    var body: some View {
+        VStack {
+            Text("Hand Tracking View!").font(.title)
+            Button("Switcher") {
+                appModel.featureMode = .switcher
+            }
+        }.padding()
+        RealityView { content in
+            makeHandEntities(in: content)
+        }
+    }
+
+    /// Creates the entity that contains all hand-tracking entities.
+    @MainActor
+    func makeHandEntities(in content: any RealityViewContentProtocol) {
+        print("adding hand entities")
+        // Add the left hand.
+        let leftHand = Entity()
+        leftHand.components.set(HandTrackingComponent(chirality: .left))
+        content.add(leftHand)
+
+        // Add the right hand.
+        let rightHand = Entity()
+        rightHand.components.set(HandTrackingComponent(chirality: .right))
+        content.add(rightHand)
+    }
 }
 
-#Preview {
-  HandTrackingView()
-}
