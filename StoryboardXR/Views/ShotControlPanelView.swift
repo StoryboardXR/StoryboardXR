@@ -12,45 +12,48 @@ struct ShotControlPanelView: View {
   @Environment(AppModel.self) private var appModel
 
   // MARK: Properties.
-  let dataIndex: Int
-  @State private var shotName: ShotName = .a
-  @State private var enableTranslation: Bool = true
-  @State private var enableRotation: Bool = true
-  @State private var enableScale: Bool = true
-  @State private var notes: String = ""
+  let shotIndex: Int
   @FocusState private var notesFocused: Bool
 
   var body: some View {
     VStack {
-      // Shot name.
-      HStack{
-        Text("Shot \(appModel.sceneNumber)").font(.largeTitle)
-        Picker("", selection: $shotName) {
+      Text("Shot \(appModel.sceneNumber)\(appModel.shots[shotIndex].id)").font(.largeTitle)
+
+      Form {
+        Picker("Shot Name", selection: appModel.shots[shotIndex].id) {
           ForEach(ShotName.allCases) { name in
             Text("\(name)")
               .tag(name)
           }
         }
+
+        Section(header: Text("Orientation")) {
+          Toggle("Translation", isOn: appModel.shots[shotIndex].enableTranslation)
+        }
       }
-      
+
       // Interaction locker.
-      Text("Locks").font(.title)
-      Toggle("Translation", isOn: $enableTranslation)
-      Toggle("Rotation", isOn: $enableRotation)
-      Toggle("Scale", isOn: $enableScale)
-      
-      // Extra notes.
-      TextEditor(text: $notes)
-        .focused($notesFocused)
-      Button("Save") {
-        notesFocused = false
-      }
+      //      Text("Locks").font(.title)
+      //      Toggle("Translation", isOn: $enableTranslation)
+      //      Toggle("Rotation", isOn: $enableRotation)
+      //      Toggle("Scale", isOn: $enableScale)
+      //
+      //      // Extra notes.
+      //      TextEditor(text: $notes)
+      //        .focused($notesFocused)
+      //      Button("Save") {
+      //        notesFocused = false
+      //      }
     }
     .padding()
+    .frame(width: 400, height: 500)
+    .background(.regularMaterial)
+    .clipShape(RoundedRectangle(cornerRadius: 20))
+    .shadow(radius: 5)
   }
 }
 
-#Preview(windowStyle: .automatic) {
-  ShotControlPanelView(dataIndex: 0)
+#Preview(windowStyle: .plain) {
+  ShotControlPanelView(shotIndex: 0)
     .environment(AppModel())
 }

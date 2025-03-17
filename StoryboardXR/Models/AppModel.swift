@@ -19,7 +19,8 @@ class AppModel {
     case blocking
   }
   var featureMode: FeatureMode = .storyboard
-  
-  // MARK: Instance state.
+
+  // MARK: Scene state.
   var sceneNumber = 1
+  var shots: [ShotModel] = [ShotModel(id: "1")]
 }
