@@ -15,7 +15,11 @@ struct HandTrackingView: View {
     var body: some View {
         RealityView { content in
             makeHandEntities(in: content)
-        }
+        }.gesture(SpatialTapGesture().targetedToAnyEntity().onEnded({value in
+            Task{
+                
+            }
+        }))
     }
 
     /// Creates the entity that contains all hand-tracking entities.

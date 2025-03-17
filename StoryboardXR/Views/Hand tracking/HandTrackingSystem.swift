@@ -73,18 +73,74 @@ struct HandTrackingSystem: System {
                 case .right: Self.latestRightHand
                 default: nil
             } else { continue }
+            
 
             // Iterate through all of the anchors on the hand skeleton.
             if let handSkeleton = handAnchor.handSkeleton {
+                
+                //L shaped gesture computation
+                // check to see if vector of hand joint 4 - 1 is orthogonal to 9 - 5
+                let joint1Transform = handSkeleton.joint(.thumbKnuckle).anchorFromJointTransform
+                let joint4Transform = handSkeleton.joint(.thumbTip).anchorFromJointTransform
+                let joint5Transform = handSkeleton.joint(.indexFingerMetacarpal).anchorFromJointTransform
+                let joint9Transform = handSkeleton.joint(.indexFingerTip).anchorFromJointTransform
+
+                let pos1 = position(from: joint1Transform)
+                let pos4 = position(from: joint4Transform)
+                let pos5 = position(from: joint5Transform)
+                let pos9 = position(from: joint9Transform)
+                
+                let vectorA = pos4 - pos1   // For example: from thumb knuckle to thumb tip.
+                let vectorB = pos9 - pos5   // For example: from index finger metacarpal to index finger tip.
+                print("Vector A: \(vectorA)")
+                print("Vector B: \(vectorB)")
+
+                let normalizedA = simd_normalize(vectorA)
+                let normalizedB = simd_normalize(vectorB)
+                
+                let dotProduct = simd_dot(normalizedA, normalizedB)
+                print("Dot Product: \(dotProduct)")
+
+                // Compute the angle between the vectors (in degrees).
+                let angleRadians = acos(dotProduct)
+                let angleDegrees = angleRadians * 180 / .pi
+                print("Angle in degrees: \(angleDegrees)")
+
+                // Check for orthogonality with a tolerance.
+                let epsilon: Float = 0.1
+                let degreeMargin: Float = 60.0
+                if abs(angleDegrees) > degreeMargin {
+                    print("Vectors are orthogonal (L-shape detected).")
+                    print(handAnchor.chirality.description)
+                } else {
+                    print("Vectors are not orthogonal.")
+                }
                 for (jointName, jointEntity) in handComponent.fingers {
                     /// The current transform of the person's hand joint.
                     let anchorFromJointTransform = handSkeleton.joint(jointName).anchorFromJointTransform
-
+                    
+                    //testing standard offset; eventually to be for translating/adjusting frame entities
+                    //var testOffsetLeft = Transform(translation: SIMD3<Float>(0.05,0.05,0.05)).matrix
+                    //var testOffsetRight = Transform(translation: SIMD3<Float>(0.05,0.05,-0.05)).matrix
+                    var testOffsetLeft = Transform(translation: SIMD3<Float>(0.0,0.0,0.0)).matrix
+                    var testOffsetRight = Transform(translation: SIMD3<Float>(0.0,0.0,-0.0)).matrix
+                
                     // Update the joint entity to match the transform of the person's hand joint.
-                    jointEntity.setTransformMatrix(
-                        handAnchor.originFromAnchorTransform * anchorFromJointTransform,
-                        relativeTo: nil
-                    )
+                    
+                    if (handComponent.chirality == .left) {
+                        jointEntity.setTransformMatrix(
+                            handAnchor.originFromAnchorTransform * testOffsetLeft * anchorFromJointTransform,
+                            relativeTo: nil
+                        )
+                    } else {
+                        //right hand coordinate adjustment for tranlations
+                        testOffsetRight.columns.3.x *= -1.0
+                        testOffsetRight.columns.3.y *= -1.0
+                        jointEntity.setTransformMatrix(
+                            handAnchor.originFromAnchorTransform * testOffsetRight * anchorFromJointTransform,
+                            relativeTo: nil
+                        )
+                    }
                 }
             }
         }
@@ -122,4 +178,16 @@ struct HandTrackingSystem: System {
         // Apply the updated hand component back to the hand entity.
         handEntity.components.set(handComponent)
     }
+    
+    // Helper function to extract translation from a transform matrix.
+    func position(from transform: simd_float4x4) -> SIMD3<Float> {
+        return SIMD3<Float>(transform.columns.3.x, transform.columns.3.y, transform.columns.3.z)
+    }
+
+    /*
+    func placeFrame() async{
+        
+        guard let leftHand
+    }
+    */
 }
