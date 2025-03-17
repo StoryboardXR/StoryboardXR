@@ -10,47 +10,72 @@ import SwiftUI
 struct ShotControlPanelView: View {
   // MARK: Environment.
   @Environment(AppModel.self) private var appModel
+  @Bindable var shotModel: ShotModel
 
   // MARK: Properties.
-  let shotIndex: Int
+  @State private var positionXInput: String = ""
+  @State private var positionYInput: String = ""
+  @State private var positionZInput: String = ""
+
   @FocusState private var notesFocused: Bool
-  private var shotModel: Binding<ShotModel> {
-    Binding(
-      get: { appModel.shots[shotIndex] },
-      set: { appModel.shots[shotIndex] = $0 })
-  }
 
   var body: some View {
     VStack {
       Text("Shot \(appModel.sceneNumber)\(shotModel.name)").font(
         .largeTitle)
 
-      Form {
-        Picker("Shot Name", selection: shotModel.name) {
+      List {
+        Picker("Shot Name", selection: $shotModel.name) {
           ForEach(ShotName.allCases) { name in
             Text("\(name)")
               .tag(name)
           }
         }
+        .pickerStyle(.palette)
 
         Section(header: Text("Orientation")) {
           Toggle(
-            "Translation", isOn: shotModel.enableTranslation)
+            "Position", isOn: $shotModel.lockPosition)
+          HStack {
+            TextField("X", text: $positionXInput)
+              .keyboardType(.decimalPad)
+              .multilineTextAlignment(.center)
+              .onAppear {
+                positionXInput = String(shotModel.position.x)
+              }
+              .onChange(of: positionXInput) { _, newValue in
+                if let value = Float(newValue) {
+                  shotModel.position.x = value
+                }
+              }
+            TextField("Y", text: $positionYInput)
+              .keyboardType(.decimalPad)
+              .multilineTextAlignment(.center)
+              .onAppear {
+                positionYInput = String(shotModel.position.y)
+              }
+              .onChange(of: positionYInput) { _, newValue in
+                if let value = Float(newValue) {
+                  shotModel.position.y = value
+                }
+              }
+            TextField("Z", text: $positionZInput)
+              .keyboardType(.decimalPad)
+              .multilineTextAlignment(.center)
+              .onAppear {
+                positionZInput = String(shotModel.position.z)
+              }
+              .onChange(of: positionZInput) { _, newValue in
+                if let value = Float(newValue) {
+                  shotModel.position.z = value
+                }
+              }
+          }
+          .disabled(shotModel.lockPosition)
+          .opacity(shotModel.lockPosition ? 0.7 : 1.0)
         }
       }
 
-      // Interaction locker.
-      //      Text("Locks").font(.title)
-      //      Toggle("Translation", isOn: $enableTranslation)
-      //      Toggle("Rotation", isOn: $enableRotation)
-      //      Toggle("Scale", isOn: $enableScale)
-      //
-      //      // Extra notes.
-      //      TextEditor(text: $notes)
-      //        .focused($notesFocused)
-      //      Button("Save") {
-      //        notesFocused = false
-      //      }
     }
     .padding()
     .frame(width: 400, height: 500)
@@ -61,6 +86,7 @@ struct ShotControlPanelView: View {
 }
 
 #Preview(windowStyle: .plain) {
-  ShotControlPanelView(shotIndex: 0)
-    .environment(AppModel())
+  let appModel = AppModel()
+  ShotControlPanelView(shotModel: appModel.shots[0])
+    .environment(appModel)
 }
