@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import simd
 
 struct ShotControlPanelView: View {
   // MARK: Environment.
@@ -13,9 +14,15 @@ struct ShotControlPanelView: View {
   @Bindable var shotModel: ShotModel
 
   // MARK: Properties.
-  @State private var positionXInput: String = ""
-  @State private var positionYInput: String = ""
-  @State private var positionZInput: String = ""
+  private var rotationBinding: Binding<simd_double3> {
+    Binding(
+      get: { shotModel.rotation.eulerAngles(order: .xyz).angles },
+      set: {
+        shotModel.rotation = Rotation3D(
+          eulerAngles: EulerAngles(angles: $0, order: .xyz))
+      }
+    )
+  }
 
   @FocusState private var notesFocused: Bool
 
@@ -29,51 +36,77 @@ struct ShotControlPanelView: View {
       } onDecrement: {
         decrementShotName()
       }
-      
+
       Section(header: Text("Orientation")) {
-        Toggle(
-          "Position", isOn: $shotModel.lockPosition)
-        HStack {
-          TextField("X", text: $positionXInput)
-            .keyboardType(.decimalPad)
-            .multilineTextAlignment(.center)
-            .onAppear {
-              positionXInput = String(shotModel.position.x)
-            }
-            .onChange(of: positionXInput) { _, newValue in
-              if let value = Float(newValue) {
-                shotModel.position.x = value
-              }
-            }
-          TextField("Y", text: $positionYInput)
-            .keyboardType(.decimalPad)
-            .multilineTextAlignment(.center)
-            .onAppear {
-              positionYInput = String(shotModel.position.y)
-            }
-            .onChange(of: positionYInput) { _, newValue in
-              if let value = Float(newValue) {
-                shotModel.position.y = value
-              }
-            }
-          TextField("Z", text: $positionZInput)
-            .keyboardType(.decimalPad)
-            .multilineTextAlignment(.center)
-            .onAppear {
-              positionZInput = String(shotModel.position.z)
-            }
-            .onChange(of: positionZInput) { _, newValue in
-              if let value = Float(newValue) {
-                shotModel.position.z = value
-              }
-            }
+        Grid {
+          // Position.
+          GridRow {
+            Text("Position:")
+              .gridColumnAlignment(.trailing)
+            TextField(
+              "X", value: $shotModel.position.x,
+              format: FloatingPointFormatStyle()
+            )
+            TextField(
+              "Y", value: $shotModel.position.y,
+              format: FloatingPointFormatStyle()
+            )
+            TextField(
+              "Z", value: $shotModel.position.z,
+              format: FloatingPointFormatStyle()
+            )
+          }
+
+          // Rotation.
+          GridRow {
+            Text("Rotation:")
+              .gridColumnAlignment(.trailing)
+            TextField(
+              "X", value: rotationBinding.x,
+              format: FloatingPointFormatStyle()
+            )
+            TextField(
+              "Y", value: rotationBinding.y,
+              format: FloatingPointFormatStyle()
+            )
+            TextField(
+              "Z", value: rotationBinding.z,
+              format: FloatingPointFormatStyle()
+            )
+          }
+
+          // Scale.
+          GridRow {
+            Text("Scale:")
+              .gridColumnAlignment(.trailing)
+            TextField(
+              "X", value: $shotModel.scale.x,
+              format: FloatingPointFormatStyle()
+            )
+            TextField(
+              "Y", value: $shotModel.scale.y,
+              format: FloatingPointFormatStyle()
+            )
+            TextField(
+              "Z", value: $shotModel.scale.z,
+              format: FloatingPointFormatStyle()
+            )
+          }
         }
-        .disabled(shotModel.lockPosition)
-        .opacity(shotModel.lockPosition ? 0.7 : 1.0)
+
+        Toggle("Lock", isOn: $shotModel.orientationLock)
+      }
+      .keyboardType(.decimalPad)
+      .multilineTextAlignment(.center)
+      .textFieldStyle(.roundedBorder)
+      
+      Section(header: Text("Notes")) {
+        TextEditor(text: $shotModel.notes)
+          .textFieldStyle(.roundedBorder)
       }
     }
     .padding()
-    .frame(width: 400, height: 500)
+    .frame(width: 500, height: 500)
     .glassBackgroundEffect()
   }
 
