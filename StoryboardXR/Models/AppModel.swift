@@ -22,5 +22,5 @@ class AppModel {
 
   // MARK: Scene state.
   var sceneNumber = 1
-  var shots: [ShotModel] = [ShotModel(id: "1")]
+  var shots: [ShotModel] = [ShotModel()]
 }

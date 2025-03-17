@@ -14,13 +14,19 @@ struct ShotControlPanelView: View {
   // MARK: Properties.
   let shotIndex: Int
   @FocusState private var notesFocused: Bool
+  private var shotModel: Binding<ShotModel> {
+    Binding(
+      get: { appModel.shots[shotIndex] },
+      set: { appModel.shots[shotIndex] = $0 })
+  }
 
   var body: some View {
     VStack {
-      Text("Shot \(appModel.sceneNumber)\(appModel.shots[shotIndex].id)").font(.largeTitle)
+      Text("Shot \(appModel.sceneNumber)\(shotModel.name)").font(
+        .largeTitle)
 
       Form {
-        Picker("Shot Name", selection: appModel.shots[shotIndex].id) {
+        Picker("Shot Name", selection: shotModel.name) {
           ForEach(ShotName.allCases) { name in
             Text("\(name)")
               .tag(name)
@@ -28,7 +34,8 @@ struct ShotControlPanelView: View {
         }
 
         Section(header: Text("Orientation")) {
-          Toggle("Translation", isOn: appModel.shots[shotIndex].enableTranslation)
+          Toggle(
+            "Translation", isOn: shotModel.enableTranslation)
         }
       }
 

@@ -54,7 +54,7 @@ struct ShotRealityView: View {
       }
     } attachments: {
       Attachment(id: SHOT_CONTROL_PANEL_ATTACHMENT_ID) {
-        ShotControlPanelView(dataIndex: 0).environment(appModel)
+        ShotControlPanelView(shotIndex: 0).environment(appModel)
       }
     }
     .gesture(
