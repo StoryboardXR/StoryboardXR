@@ -19,69 +19,91 @@ struct ShotControlPanelView: View {
 
   @FocusState private var notesFocused: Bool
 
+  // MARK: View.
   var body: some View {
-    VStack {
-      Text("Shot \(appModel.sceneNumber)\(shotModel.name)").font(
-        .largeTitle)
-
-      List {
-        Picker("Shot Name", selection: $shotModel.name) {
-          ForEach(ShotName.allCases) { name in
-            Text("\(name)")
-              .tag(name)
-          }
-        }
-        .pickerStyle(.palette)
-
-        Section(header: Text("Orientation")) {
-          Toggle(
-            "Position", isOn: $shotModel.lockPosition)
-          HStack {
-            TextField("X", text: $positionXInput)
-              .keyboardType(.decimalPad)
-              .multilineTextAlignment(.center)
-              .onAppear {
-                positionXInput = String(shotModel.position.x)
-              }
-              .onChange(of: positionXInput) { _, newValue in
-                if let value = Float(newValue) {
-                  shotModel.position.x = value
-                }
-              }
-            TextField("Y", text: $positionYInput)
-              .keyboardType(.decimalPad)
-              .multilineTextAlignment(.center)
-              .onAppear {
-                positionYInput = String(shotModel.position.y)
-              }
-              .onChange(of: positionYInput) { _, newValue in
-                if let value = Float(newValue) {
-                  shotModel.position.y = value
-                }
-              }
-            TextField("Z", text: $positionZInput)
-              .keyboardType(.decimalPad)
-              .multilineTextAlignment(.center)
-              .onAppear {
-                positionZInput = String(shotModel.position.z)
-              }
-              .onChange(of: positionZInput) { _, newValue in
-                if let value = Float(newValue) {
-                  shotModel.position.z = value
-                }
-              }
-          }
-          .disabled(shotModel.lockPosition)
-          .opacity(shotModel.lockPosition ? 0.7 : 1.0)
-        }
+    Form {
+      Stepper {
+        Text("Shot \(appModel.sceneNumber)\(shotModel.name)").font(.largeTitle)
+      } onIncrement: {
+        incrementShotName()
+      } onDecrement: {
+        decrementShotName()
       }
-
+      
+      Section(header: Text("Orientation")) {
+        Toggle(
+          "Position", isOn: $shotModel.lockPosition)
+        HStack {
+          TextField("X", text: $positionXInput)
+            .keyboardType(.decimalPad)
+            .multilineTextAlignment(.center)
+            .onAppear {
+              positionXInput = String(shotModel.position.x)
+            }
+            .onChange(of: positionXInput) { _, newValue in
+              if let value = Float(newValue) {
+                shotModel.position.x = value
+              }
+            }
+          TextField("Y", text: $positionYInput)
+            .keyboardType(.decimalPad)
+            .multilineTextAlignment(.center)
+            .onAppear {
+              positionYInput = String(shotModel.position.y)
+            }
+            .onChange(of: positionYInput) { _, newValue in
+              if let value = Float(newValue) {
+                shotModel.position.y = value
+              }
+            }
+          TextField("Z", text: $positionZInput)
+            .keyboardType(.decimalPad)
+            .multilineTextAlignment(.center)
+            .onAppear {
+              positionZInput = String(shotModel.position.z)
+            }
+            .onChange(of: positionZInput) { _, newValue in
+              if let value = Float(newValue) {
+                shotModel.position.z = value
+              }
+            }
+        }
+        .disabled(shotModel.lockPosition)
+        .opacity(shotModel.lockPosition ? 0.7 : 1.0)
+      }
     }
     .padding()
     .frame(width: 400, height: 500)
-    .background(.regularMaterial)
-    .clipShape(RoundedRectangle(cornerRadius: 20))
-    .shadow(radius: 5)
+    .glassBackgroundEffect()
+  }
+
+  // MARK: Helper functions.
+
+  /// Get all available shot names including this one.
+  var unusedShotNames: [ShotName] {
+    // Generate list of shot names.
+    let currentShotName = shotModel.name
+    let usedNames: Set = Set(
+      appModel.shots.compactMap { shotModel in shotModel.name })
+    return ShotName.allCases.filter { name in
+      name == currentShotName || !usedNames.contains(name)
+    }
+  }
+
+  /// Set shot name to the next lexigraphically available one.
+  func incrementShotName() {
+    shotModel.name =
+      unusedShotNames[
+        (unusedShotNames.firstIndex(of: shotModel.name)! + 1)
+          % unusedShotNames.count]
+  }
+
+  /// Set shot name to the previous lexigraphically available one.
+  func decrementShotName() {
+    shotModel.name =
+      unusedShotNames[
+        (unusedShotNames.firstIndex(of: shotModel.name)! - 1)
+          % unusedShotNames.count]
   }
 }
 

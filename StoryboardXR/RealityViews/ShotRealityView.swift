@@ -67,6 +67,11 @@ struct ShotRealityView: View {
   /// Shot placement.
   var positionGesture: some Gesture {
     DragGesture().targetedToAnyEntity().onChanged({ gesture in
+      // Exit if locked.
+      if shotModel.lockPosition {
+        return
+      }
+      
       // Get the entity.
       let rootEntity = gesture.entity
 
@@ -92,6 +97,11 @@ struct ShotRealityView: View {
   /// Shot angle.
   var rotationGesture: some Gesture {
     RotateGesture3D().targetedToAnyEntity().onChanged({ gesture in
+      // Exit if locked.
+      if shotModel.lockRotation {
+        return
+      }
+      
       // Get the entity.
       let rootEntity = gesture.entity
 
@@ -121,6 +131,11 @@ struct ShotRealityView: View {
   /// Shot frame scaling.
   var scaleGesture: some Gesture {
     MagnifyGesture().targetedToAnyEntity().onChanged({ gesture in
+      // Exit if locked.
+      if shotModel.lockScale {
+        return
+      }
+
       // Get the entity.
       let rootEntity = gesture.entity
 
