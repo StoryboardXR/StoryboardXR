@@ -21,7 +21,7 @@ struct StoryboardXRApp: App {
       case .storyboard:
         StoryboardView().environment(appModel)
       case .handTracking:
-        MainHandTrackingView().environment(appModel)
+        HandTrackingView().environment(appModel)
       case .blocking:
         BlockingView().environment(appModel)
       }
@@ -30,12 +30,13 @@ struct StoryboardXRApp: App {
     ImmersiveSpace(id: STORYBOARD_SPACE_ID) {
       ForEach(appModel.shots) { shotModel in
         ShotRealityView(shotModel: shotModel).environment(appModel)
+        HandTrackingRealityView()
       }
     }
     .immersionStyle(selection: .constant(.mixed), in: .mixed)
 
-    ImmersiveSpace(id: "HandTrackingView"){
-        HandTrackingView()
+    ImmersiveSpace(id: "HandTrackingRealityView"){
+        HandTrackingRealityView()
     }
   }
 }
