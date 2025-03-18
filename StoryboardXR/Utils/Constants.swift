@@ -11,6 +11,7 @@ let SHOT_CONTROL_PANEL_ATTACHMENT_ID = "ShotControlPanelAttachment"
 
 // MARK: Names.
 let SHOT_FRAME_ENTITY_NAME = "ShotFrame"
+let ORIGIN_ENTITY_NAME = "Origin"
 
 /// Shot identifying name.
 enum ShotName: String, CaseIterable, CustomStringConvertible, Identifiable {
