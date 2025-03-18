@@ -27,7 +27,7 @@ struct HandTrackingSystem: System {
     
     private static var LGestureChirality: HandAnchor.Chirality? = nil
     
-    private static var LGestureReleased: Bool = false
+    private static var LTapGestureReleased: Bool = true
     
     
     private let scene: Scene
@@ -126,12 +126,26 @@ struct HandTrackingSystem: System {
                     Self.LGestureDetected = true
                     Self.LGestureChirality = handAnchor.chirality
                     
+                    // Identify the other hand (opposite chirality).
+                    let lChirality = Self.LGestureChirality
+                    let otherHandAnchor: HandAnchor? = (lChirality == .left) ? Self.latestRightHand : Self.latestLeftHand
+                    let tapGestureDetect = isTapGestureDetected(for: otherHandAnchor!)
+                    if tapGestureDetect && Self.LTapGestureReleased && Self.LGestureDetected{
+                        //add frame object
+                        placeFrame(inFrontOf: lChirality!)
+                        Self.LTapGestureReleased = false
+                        Self.LGestureChirality = nil
+                        print("Should be placing a frame now, but only once before releasing the tap hopefully")
+                    } else if !tapGestureDetect && !Self.LTapGestureReleased{
+                        Self.LTapGestureReleased = true
+                        print("tap is released!")
+                    }
                 } else {
                     //print("Vectors are not \"orthogonal\".")
                     Self.LGestureDetected = false
                     Self.LGestureChirality = nil
-                    Self.LGestureReleased = true
                 }
+                
                 for (jointName, jointEntity) in handComponent.fingers {
                     /// The current transform of the person's hand joint.
                     let anchorFromJointTransform = handSkeleton.joint(jointName).anchorFromJointTransform
@@ -159,20 +173,6 @@ struct HandTrackingSystem: System {
                         )
                     }
                 }
-            }
-        }
-        
-        // --- New Code: Check for a tap gesture on the opposite hand and spawn a sphere if both gestures are detected.
-        if Self.LGestureDetected && Self.LGestureReleased, let lChirality = Self.LGestureChirality {
-            Self.LGestureReleased = false
-            // Identify the other hand (opposite chirality).
-            let otherHandAnchor: HandAnchor? = (lChirality == .left) ? Self.latestRightHand : Self.latestLeftHand
-            if let otherHand = otherHandAnchor, isTapGestureDetected(for: otherHand) {
-                // Spawn the sphere in front of the L-shaped hand.
-                placeFrame(inFrontOf: lChirality)
-                // Optionally, reset the gesture flags to avoid repeated spawns.
-                Self.LGestureDetected = false
-                Self.LGestureChirality = nil
             }
         }
     }
