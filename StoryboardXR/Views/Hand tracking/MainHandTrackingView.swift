@@ -19,7 +19,7 @@ struct MainHandTrackingView: View {
         VStack {
             Text("Hand Tracking View!").font(.title)
             Button("Switcher") {
-                appModel.featureMode = .switcher
+                AppModel.FeatureMode = .switcher
             }
         }.padding().onAppear {
             Task {

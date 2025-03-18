@@ -31,9 +31,4 @@ struct HandTrackingView: View {
         rightHand.components.set(HandTrackingComponent(chirality: .right))
         content.add(rightHand)
     }
-    
-    // Try making frames here
-    func placeFrame() {
-        
-    }
 }
