@@ -12,7 +12,7 @@ import ARKit
 struct HandTrackingRealityView: View {
     // Store a reference to the RealityView content for later use.
     @State private var sceneContent: (any RealityViewContentProtocol)? = nil
-    @State private var appModel = AppModel()
+    @Environment(AppModel.self) private var appModel
 
     var body: some View {
         RealityView { content in

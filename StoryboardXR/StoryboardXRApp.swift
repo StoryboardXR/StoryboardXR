@@ -28,9 +28,9 @@ struct StoryboardXRApp: App {
     }
 
     ImmersiveSpace(id: STORYBOARD_SPACE_ID) {
+      HandTrackingRealityView().environment(appModel)
       ForEach(appModel.shots) { shotModel in
         ShotRealityView(shotModel: shotModel).environment(appModel)
-        HandTrackingRealityView()
       }
     }
     .immersionStyle(selection: .constant(.mixed), in: .mixed)
