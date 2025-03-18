@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import ARKit
 
 /// Maintains app-wide state
 @MainActor
@@ -20,11 +19,6 @@ class AppModel {
     case blocking
   }
   var featureMode: FeatureMode = .storyboard
-  
-  // MARK: World Tracking.
-  let arkitSesion = ARKitSession()
-  let worldInfo = WorldTrackingProvider()
-  var sceneWorldAnchor: WorldAnchor?
 
   // MARK: Scene state.
   var sceneNumber = 1
