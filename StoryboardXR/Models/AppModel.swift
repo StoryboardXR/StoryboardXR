@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import RealityFoundation
 
 /// Maintains app-wide state
 @MainActor
@@ -23,4 +24,5 @@ class AppModel {
   // MARK: Scene state.
   var sceneNumber = 1
   var shots: [ShotModel] = [ShotModel()]
+  var originEntity: Entity?
 }

@@ -37,7 +37,7 @@ struct ShotRealityView: View {
       // Create a head anchor to place the shot frame.
       let headAnchor = AnchorEntity(.head)
       headAnchor.anchoring.trackingMode = .once
-      content.add(headAnchor)
+      appModel.originEntity?.addChild(headAnchor)
       
       // Place the shot frame in front of the user.
       shotFrameEntity.setPosition([0, 0, -0.6], relativeTo: headAnchor)

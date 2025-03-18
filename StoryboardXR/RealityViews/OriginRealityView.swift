@@ -21,15 +21,18 @@ struct OriginRealityView: View {
     RealityView { content in
       // Load the entity.
       guard
-        let originEntity = try? await Entity(
+        let loadedOriginEntity = try? await Entity(
           named: ORIGIN_ENTITY_NAME, in: realityKitContentBundle)
       else {
         assertionFailure("Failed to load origin model")
         return
       }
+      
+      // Keep reference to it in app state.
+      appModel.originEntity = loadedOriginEntity
 
       // Add to the scene.
-      content.add(originEntity)
+      content.add(appModel.originEntity!)
     }
     .gesture(positionGesture)
     .gesture(rotationGesture)
@@ -85,8 +88,4 @@ struct OriginRealityView: View {
         initialRotation = nil
       })
   }
-}
-
-#Preview {
-  OriginRealityView()
 }

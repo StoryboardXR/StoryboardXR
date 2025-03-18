@@ -21,6 +21,7 @@ struct StoryboardView: View {
       }
     }
     .padding()
+
     // MARK: Immersive space handler.
     .onAppear {
       Task {

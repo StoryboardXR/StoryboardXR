@@ -30,6 +30,7 @@ struct StoryboardXRApp: App {
     ImmersiveSpace(id: STORYBOARD_SPACE_ID) {
       OriginRealityView().environment(appModel)
       
+      // FIXME: Race condition. Need origin to be loaded first.
       ForEach(appModel.shots) { shotModel in
         ShotRealityView(shotModel: shotModel).environment(appModel)
       }
