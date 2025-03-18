@@ -11,18 +11,29 @@ import ARKit
 /// A system that provides hand-tracking capabilities.
 struct HandTrackingSystem: System {
     /// The active ARKit session.
-    static var arSession = ARKitSession()
+    private static var arSession = ARKitSession()
 
     /// The provider instance for hand-tracking.
-    static let handTracking = HandTrackingProvider()
+    private static let handTracking = HandTrackingProvider()
 
     /// The most recent anchor that the provider detects on the left hand.
-    static var latestLeftHand: HandAnchor?
+    private static var latestLeftHand: HandAnchor?
 
     /// The most recent anchor that the provider detects on the right hand.
-    static var latestRightHand: HandAnchor?
+    private static var latestRightHand: HandAnchor?
+    
+    // The tracker for if L shape is engaged
+    private static var LGestureDetected: Bool = false
+    
+    private static var LGestureChirality: HandAnchor.Chirality? = nil
+    
+    private static var LGestureReleased: Bool = false
+    
+    
+    private let scene: Scene
 
     init(scene: RealityKit.Scene) {
+        self.scene = scene
         Task { await Self.runSession() }
     }
 
@@ -92,28 +103,34 @@ struct HandTrackingSystem: System {
                 
                 let vectorA = pos4 - pos1   // For example: from thumb knuckle to thumb tip.
                 let vectorB = pos9 - pos5   // For example: from index finger metacarpal to index finger tip.
-                print("Vector A: \(vectorA)")
-                print("Vector B: \(vectorB)")
+                //print("Vector A: \(vectorA)")
+                //print("Vector B: \(vectorB)")
 
                 let normalizedA = simd_normalize(vectorA)
                 let normalizedB = simd_normalize(vectorB)
                 
                 let dotProduct = simd_dot(normalizedA, normalizedB)
-                print("Dot Product: \(dotProduct)")
+                //print("Dot Product: \(dotProduct)")
 
                 // Compute the angle between the vectors (in degrees).
                 let angleRadians = acos(dotProduct)
                 let angleDegrees = angleRadians * 180 / .pi
-                print("Angle in degrees: \(angleDegrees)")
+                //print("Angle in degrees: \(angleDegrees)")
 
                 // Check for orthogonality with a tolerance.
                 let epsilon: Float = 0.1
                 let degreeMargin: Float = 60.0
                 if abs(angleDegrees) > degreeMargin {
-                    print("Vectors are orthogonal (L-shape detected).")
-                    print(handAnchor.chirality.description)
+                    //print("Vectors are \"orthogonal\" (L-shape detected).")
+                    //print(handAnchor.chirality.description)
+                    Self.LGestureDetected = true
+                    Self.LGestureChirality = handAnchor.chirality
+                    
                 } else {
-                    print("Vectors are not orthogonal.")
+                    //print("Vectors are not \"orthogonal\".")
+                    Self.LGestureDetected = false
+                    Self.LGestureChirality = nil
+                    Self.LGestureReleased = true
                 }
                 for (jointName, jointEntity) in handComponent.fingers {
                     /// The current transform of the person's hand joint.
@@ -142,6 +159,20 @@ struct HandTrackingSystem: System {
                         )
                     }
                 }
+            }
+        }
+        
+        // --- New Code: Check for a tap gesture on the opposite hand and spawn a sphere if both gestures are detected.
+        if Self.LGestureDetected && Self.LGestureReleased, let lChirality = Self.LGestureChirality {
+            Self.LGestureReleased = false
+            // Identify the other hand (opposite chirality).
+            let otherHandAnchor: HandAnchor? = (lChirality == .left) ? Self.latestRightHand : Self.latestLeftHand
+            if let otherHand = otherHandAnchor, isTapGestureDetected(for: otherHand) {
+                // Spawn the sphere in front of the L-shaped hand.
+                placeFrame(inFrontOf: lChirality)
+                // Optionally, reset the gesture flags to avoid repeated spawns.
+                Self.LGestureDetected = false
+                Self.LGestureChirality = nil
             }
         }
     }
@@ -184,10 +215,38 @@ struct HandTrackingSystem: System {
         return SIMD3<Float>(transform.columns.3.x, transform.columns.3.y, transform.columns.3.z)
     }
 
-    /*
-    func placeFrame() async{
-        
-        guard let leftHand
+    /// Checks if the given hand anchor is performing a tap gesture.
+    /// For example, this implementation checks if the distance between the index finger tip and thumb tip is below a threshold.
+    private func isTapGestureDetected(for handAnchor: HandAnchor) -> Bool {
+        guard let handSkeleton = handAnchor.handSkeleton else { return false }
+        let indexTipPos = position(from: handSkeleton.joint(.indexFingerTip).anchorFromJointTransform)
+        let thumbTipPos = position(from: handSkeleton.joint(.thumbTip).anchorFromJointTransform)
+        let distance = simd_distance(indexTipPos, thumbTipPos)
+        // Define a threshold (in meters); adjust as needed.
+        return distance < 0.03
     }
-    */
+    
+
+    @MainActor
+    func placeFrame(inFrontOf chirality: HandAnchor.Chirality){
+        print("trying to place frame: " + chirality.description)
+        let sphereRadius: Float = 0.01
+        let sphereMaterial = SimpleMaterial(color: .purple, isMetallic: false)
+        let sphereEntity = ModelEntity(
+            mesh: .generateSphere(radius: sphereRadius),
+            materials: [sphereMaterial]
+        )
+        
+        // Retrieve the L-shaped hand's anchor.
+        guard let handAnchor = (chirality == .left) ? Self.latestLeftHand : Self.latestRightHand else { return }
+        print("hand anchor got")
+        let offset = SIMD3<Float>(0.5, 0, 0)
+        let spawnMatrix = handAnchor.originFromAnchorTransform * Transform(translation: offset).matrix
+        
+        let anchorEntity = AnchorEntity(world: spawnMatrix)
+        anchorEntity.addChild(sphereEntity)
+        
+        // Add the anchor (and thus the sphere) to the scene.
+        //scene.addAnchor(anchorEntity)
+    }
 }

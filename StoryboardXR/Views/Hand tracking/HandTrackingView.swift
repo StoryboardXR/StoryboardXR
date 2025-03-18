@@ -1,5 +1,5 @@
 //
-//  MainHandTrackingView.swift
+//  HandTrackingView.swift
 //  StoryboardXR
 //
 //  Created by Dalton Brockett on 3/15/25.
@@ -15,11 +15,7 @@ struct HandTrackingView: View {
     var body: some View {
         RealityView { content in
             makeHandEntities(in: content)
-        }.gesture(SpatialTapGesture().targetedToAnyEntity().onEnded({value in
-            Task{
-                
-            }
-        }))
+        }
     }
 
     /// Creates the entity that contains all hand-tracking entities.
@@ -34,5 +30,10 @@ struct HandTrackingView: View {
         let rightHand = Entity()
         rightHand.components.set(HandTrackingComponent(chirality: .right))
         content.add(rightHand)
+    }
+    
+    // Try making frames here
+    func placeFrame() {
+        
     }
 }
