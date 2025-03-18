@@ -7,6 +7,11 @@
 
 import RealityKit
 import ARKit
+import SwiftUICore
+
+extension Notification.Name {
+    static let shouldPlaceFrame = Notification.Name("shouldPlaceFrame")
+}
 
 /// A system that provides hand-tracking capabilities.
 struct HandTrackingSystem: System {
@@ -28,6 +33,8 @@ struct HandTrackingSystem: System {
     private static var LGestureChirality: HandAnchor.Chirality? = nil
     
     private static var LTapGestureReleased: Bool = true
+    
+    //static var framePlacementManager = FramePlacementManager()
     
     
     private let scene: Scene
@@ -132,6 +139,8 @@ struct HandTrackingSystem: System {
                     let tapGestureDetect = isTapGestureDetected(for: otherHandAnchor!)
                     if tapGestureDetect && Self.LTapGestureReleased && Self.LGestureDetected{
                         //add frame object
+                        //placeFrame(inFrontOf: lChirality!)
+                        //Self.framePlacementManager.shouldPlaceFrame = true
                         placeFrame(inFrontOf: lChirality!)
                         Self.LTapGestureReleased = false
                         Self.LGestureChirality = nil
@@ -229,6 +238,11 @@ struct HandTrackingSystem: System {
 
     @MainActor
     func placeFrame(inFrontOf chirality: HandAnchor.Chirality){
+        //Some logic to add a sphere to the scene
+        NotificationCenter.default.post(name: .shouldPlaceFrame, object: chirality)
+
+        //ignore code below for now
+        /*
         print("trying to place frame: " + chirality.description)
         let sphereRadius: Float = 0.01
         let sphereMaterial = SimpleMaterial(color: .purple, isMetallic: false)
@@ -248,5 +262,6 @@ struct HandTrackingSystem: System {
         
         // Add the anchor (and thus the sphere) to the scene.
         //scene.addAnchor(anchorEntity)
+         */
     }
 }
