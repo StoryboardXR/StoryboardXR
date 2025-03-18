@@ -15,42 +15,46 @@ struct ShotRealityView: View {
   var shotModel: ShotModel
 
   // MARK: Gesture start markers.
-  @State var initialPosition: SIMD3<Float>? = nil
-  @State var initialScale: SIMD3<Float>? = nil
-  @State var initialRotation: simd_quatf? = nil
+  @State private var initialPosition: SIMD3<Float>? = nil
+  @State private var initialScale: SIMD3<Float>? = nil
+  @State private var initialRotation: simd_quatf? = nil
 
+  // MARK: Properties.
+  @State private var controlPanelAttachmentEntity: Entity?
+
+  // MARK: View.
   var body: some View {
     RealityView { content, attachments in
-      // MARK: Load the shot frame model.
-
       // Load the entity.
       guard
-        let shotEntity = try? await Entity(
-          named: "Shot", in: realityKitContentBundle)
+        let shotFrameEntity = try? await Entity(
+          named: SHOT_FRAME_ENTITY_NAME, in: realityKitContentBundle)
       else {
         assertionFailure("Failed to load frame model")
         return
       }
+      
+      // Create a head anchor to place the shot frame.
+      let headAnchor = AnchorEntity(.head)
+      headAnchor.anchoring.trackingMode = .once
+      content.add(headAnchor)
+      
+      // Place the shot frame in front of the user.
+      shotFrameEntity.setPosition([0, 0, -0.6], relativeTo: headAnchor)
+      headAnchor.addChild(shotFrameEntity)
 
-      // Get the model bounds.
-      let bounds = shotEntity.visualBounds(relativeTo: nil)
-
-      // Spawn 1.5m off the ground
-      shotEntity.position.y = 1
-
-      // Spawn somewhere in the visual bounds.
-      shotEntity.position.z -= bounds.boundingRadius
-
-      // Add entity to the view.
-      content.add(shotEntity)
-
-      // MARK: Add control panel.
-      if let controlPanelAttachment = attachments.entity(
+      // Add control panel.
+      if let controlPanelAttachmentEntity = attachments.entity(
         for: SHOT_CONTROL_PANEL_ATTACHMENT_ID)
       {
-        shotEntity.addChild(controlPanelAttachment)
+        // Save reference to panel.
+        self.controlPanelAttachmentEntity = controlPanelAttachmentEntity
 
-        controlPanelAttachment.setPosition([0.1, 0, 0], relativeTo: shotEntity)
+        // Add the control panel to the shot frame.
+        shotFrameEntity.addChild(controlPanelAttachmentEntity)
+
+        // Position control panel.
+        positionControlPanel(shotFrameEntity: shotFrameEntity)
       }
     } attachments: {
       Attachment(id: SHOT_CONTROL_PANEL_ATTACHMENT_ID) {
@@ -64,6 +68,8 @@ struct ShotRealityView: View {
     )
   }
 
+  // MARK: Orientation gestures.
+
   /// Shot placement.
   var positionGesture: some Gesture {
     DragGesture().targetedToAnyEntity().onChanged({ gesture in
@@ -72,8 +78,8 @@ struct ShotRealityView: View {
         return
       }
 
-      // Get the entity.
-      let rootEntity = gesture.entity
+      // Get the higher root entity (with the control panel).
+      let rootEntity = gesture.entity.parent!
 
       // Mark the current position at the start of the drag.
       if initialPosition == nil {
@@ -102,8 +108,8 @@ struct ShotRealityView: View {
         return
       }
 
-      // Get the entity.
-      let rootEntity = gesture.entity
+      // Get the higher root entity (with the control panel).
+      let rootEntity = gesture.entity.parent!
 
       // Mark the current rotation at the start of the gesture.
       if initialRotation == nil {
@@ -136,8 +142,8 @@ struct ShotRealityView: View {
         return
       }
 
-      // Get the entity.
-      let rootEntity = gesture.entity
+      // Get the root entity but not the parent with the control panel.
+      let rootEntity = gesture.entity.parent!
 
       // Mark the current scale at the start of the scale.
       if initialScale == nil {
@@ -152,9 +158,30 @@ struct ShotRealityView: View {
         * Float(gesture.gestureValue.magnification)
       shotModel.scale = newScale
       rootEntity.scale = newScale
+
+      // Update the control panel's position
+//      positionControlPanel(shotFrameEntity: rootEntity.parent)
     }).onEnded({ _ in
       // Reset the initial scale for the next scale.
       initialScale = nil
     })
+  }
+
+  // MARK: Helper functions.
+
+  /// Position the control panel attachment entity next to the frame.
+  func positionControlPanel(shotFrameEntity: Entity) {
+    // Exit if no control panel exist.
+    if let unwrappedControlPanelAttachmentEntity = controlPanelAttachmentEntity
+    {
+      unwrappedControlPanelAttachmentEntity.setPosition(
+        [
+          shotFrameEntity.visualBounds(relativeTo: nil).boundingRadius
+            + unwrappedControlPanelAttachmentEntity.visualBounds(
+              relativeTo: nil
+            )
+            .boundingRadius, 0, 0,
+        ], relativeTo: shotFrameEntity)
+    }
   }
 }
