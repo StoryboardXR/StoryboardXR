@@ -72,8 +72,16 @@ struct ShotRealityView: View {
         return
       }
 
-      // Get the entity.
-      let rootEntity = gesture.entity
+      // Get the root entity.
+      var rootEntity: Entity {
+        if let parentRootEntity = gesture.entity.parent {
+          if parentRootEntity.name == "Root" {
+            return parentRootEntity
+          }
+        }
+
+        return gesture.entity
+      }
 
       // Mark the current position at the start of the drag.
       if initialPosition == nil {
@@ -102,8 +110,16 @@ struct ShotRealityView: View {
         return
       }
 
-      // Get the entity.
-      let rootEntity = gesture.entity
+      // Get the root entity.
+      var rootEntity: Entity {
+        if let parentRootEntity = gesture.entity.parent {
+          if parentRootEntity.name == "Root" {
+            return parentRootEntity
+          }
+        }
+
+        return gesture.entity
+      }
 
       // Mark the current rotation at the start of the gesture.
       if initialRotation == nil {
