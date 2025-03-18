@@ -13,6 +13,12 @@ extension Notification.Name {
     static let shouldPlaceFrame = Notification.Name("shouldPlaceFrame")
 }
 
+extension HandTrackingSystem {
+    static var currentLeftHand: HandAnchor? { return latestLeftHand }
+    static var currentRightHand: HandAnchor? { return latestRightHand }
+}
+
+
 /// A system that provides hand-tracking capabilities.
 struct HandTrackingSystem: System {
     /// The active ARKit session.
