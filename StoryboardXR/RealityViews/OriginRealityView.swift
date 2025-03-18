@@ -32,6 +32,7 @@ struct OriginRealityView: View {
       content.add(originEntity)
     }
     .gesture(positionGesture)
+    .gesture(rotationGesture)
   }
 
   // MARK: Orientation gestures.
@@ -39,7 +40,7 @@ struct OriginRealityView: View {
     DragGesture()
       .targetedToAnyEntity()
       .onChanged({ gesture in
-        /// Drag gesture entity.
+        // Drag gesture entity.
         let rootEntity = gesture.entity
 
         // Capture initial position.
@@ -57,6 +58,31 @@ struct OriginRealityView: View {
       .onEnded({ _ in
         // Reset initial position.
         initialPosition = nil
+      })
+  }
+
+  var rotationGesture: some Gesture {
+    RotateGesture3D(constrainedToAxis: .y)
+      .targetedToAnyEntity()
+      .onChanged({ gesture in
+        // Rotate gesture entity.
+        let rootEntity = gesture.entity
+
+        // Capture initial rotation.
+        if self.initialRotation == nil {
+          self.initialRotation = rootEntity.transform.rotation
+        }
+
+        // Compute the rotation.
+        let rotation = Rotation3D(initialRotation ?? .init()).rotated(
+          by: gesture.rotation)
+
+        // Apply the rotation.
+        rootEntity.transform.rotation = simd_quatf(rotation)
+      })
+      .onEnded({ _ in
+        // Reset initial rotation.
+        initialRotation = nil
       })
   }
 }
