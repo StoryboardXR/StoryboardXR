@@ -93,13 +93,14 @@ struct ShotControlPanelView: View {
             )
           }
         }
+        .disabled(shotModel.orientationLock)
+        .keyboardType(.decimalPad)
+        .multilineTextAlignment(.center)
+        .textFieldStyle(.roundedBorder)
 
         Toggle("Lock", isOn: $shotModel.orientationLock)
       }
-      .keyboardType(.decimalPad)
-      .multilineTextAlignment(.center)
-      .textFieldStyle(.roundedBorder)
-      
+
       Section(header: Text("Notes")) {
         TextEditor(text: $shotModel.notes)
           .textFieldStyle(.roundedBorder)
