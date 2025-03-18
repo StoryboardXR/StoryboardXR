@@ -5,8 +5,12 @@
 //  Created by Kenneth Yang on 3/16/25.
 //
 
+// MARK: ID's
 let STORYBOARD_SPACE_ID = "StoryboardSpace"
 let SHOT_CONTROL_PANEL_ATTACHMENT_ID = "ShotControlPanelAttachment"
+
+// MARK: Names.
+let SHOT_FRAME_ENTITY_NAME = "ShotFrame"
 
 /// Shot identifying name.
 enum ShotName: String, CaseIterable, CustomStringConvertible, Identifiable {
