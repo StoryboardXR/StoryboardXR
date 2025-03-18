@@ -10,6 +10,7 @@ import SwiftUI
 @main
 struct StoryboardXRApp: App {
 
+  // MARK: States.
   @State private var appModel = AppModel()
 
   var body: some Scene {
@@ -25,10 +26,14 @@ struct StoryboardXRApp: App {
         BlockingView().environment(appModel)
       }
     }
-    ImmersiveSpace(id: "FrameView") {
-        FrameView()
-    }.immersionStyle(selection: .constant(.mixed), in: .mixed)
-      
+
+    ImmersiveSpace(id: STORYBOARD_SPACE_ID) {
+      ForEach(appModel.shots) { shotModel in
+        ShotRealityView(shotModel: shotModel).environment(appModel)
+      }
+    }
+    .immersionStyle(selection: .constant(.mixed), in: .mixed)
+
     ImmersiveSpace(id: "HandTrackingView"){
         HandTrackingView()
     }

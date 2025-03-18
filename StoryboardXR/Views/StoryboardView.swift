@@ -8,18 +8,23 @@
 import SwiftUI
 
 struct StoryboardView: View {
+  // MARK: Environment.
   @Environment(AppModel.self) private var appModel
   @Environment(\.openImmersiveSpace) var openImmersiveSpace
   @Environment(\.dismissImmersiveSpace) var dismissImmersiveSpace
+
   var body: some View {
     VStack {
       Text("Storyboard View").font(.title)
       Button("Switcher") {
         appModel.featureMode = .switcher
       }
-    }.padding().onAppear {
+    }
+    .padding()
+    // MARK: Immersive space handler.
+    .onAppear {
       Task {
-        await openImmersiveSpace(id: "FrameView")
+        await openImmersiveSpace(id: STORYBOARD_SPACE_ID)
       }
     }.onDisappear {
       Task {
@@ -27,8 +32,4 @@ struct StoryboardView: View {
       }
     }
   }
-}
-
-#Preview {
-  StoryboardView()
 }
