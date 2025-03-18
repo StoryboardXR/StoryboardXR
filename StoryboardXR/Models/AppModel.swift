@@ -11,15 +11,7 @@ import SwiftUI
 @MainActor
 @Observable
 class AppModel {
-  let immersiveSpaceID = "ImmersiveSpace"
-  enum ImmersiveSpaceState {
-    case closed
-    case inTransition
-    case open
-  }
-  var immersiveSpaceState = ImmersiveSpaceState.closed
-
-  // Feature modes.
+  // MARK: Feature modes.
   enum FeatureMode {
     case switcher
     case storyboard
@@ -27,4 +19,8 @@ class AppModel {
     case blocking
   }
   var featureMode: FeatureMode = .storyboard
+
+  // MARK: Scene state.
+  var sceneNumber = 1
+  var shots: [ShotModel] = [ShotModel()]
 }
