@@ -242,32 +242,9 @@ struct HandTrackingSystem: System {
     }
     
 
+    // Sends notification to HandTrackingView to prace frame object
     @MainActor
     func placeFrame(inFrontOf chirality: HandAnchor.Chirality){
-        //Some logic to add a sphere to the scene
         NotificationCenter.default.post(name: .shouldPlaceFrame, object: chirality)
-
-        //ignore code below for now
-        /*
-        print("trying to place frame: " + chirality.description)
-        let sphereRadius: Float = 0.01
-        let sphereMaterial = SimpleMaterial(color: .purple, isMetallic: false)
-        let sphereEntity = ModelEntity(
-            mesh: .generateSphere(radius: sphereRadius),
-            materials: [sphereMaterial]
-        )
-        
-        // Retrieve the L-shaped hand's anchor.
-        guard let handAnchor = (chirality == .left) ? Self.latestLeftHand : Self.latestRightHand else { return }
-        print("hand anchor got")
-        let offset = SIMD3<Float>(0.5, 0, 0)
-        let spawnMatrix = handAnchor.originFromAnchorTransform * Transform(translation: offset).matrix
-        
-        let anchorEntity = AnchorEntity(world: spawnMatrix)
-        anchorEntity.addChild(sphereEntity)
-        
-        // Add the anchor (and thus the sphere) to the scene.
-        //scene.addAnchor(anchorEntity)
-         */
     }
 }

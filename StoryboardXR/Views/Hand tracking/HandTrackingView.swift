@@ -12,6 +12,7 @@ import ARKit
 struct HandTrackingView: View {
     // Store a reference to the RealityView content for later use.
     @State private var sceneContent: (any RealityViewContentProtocol)? = nil
+    @State private var appModel = AppModel()
 
     var body: some View {
         RealityView { content in
@@ -26,6 +27,8 @@ struct HandTrackingView: View {
                let content = sceneContent {
                 // Now that we have the captured content, add the sphere.
                 addTestSphere(in: content, for: chirality)
+                
+                //Woohooo sphere spawning works on special gesture, let's get some frames loaded in based off this
             }
         }
     }
@@ -79,6 +82,8 @@ struct HandTrackingView: View {
     }
 
     // Helper function to compute the forward vector from a transform matrix.
+    // (I'll probably end up changing the methodology for formatting our frames relative to hand
+    //  but this works for now)
     func forwardVector(from transform: simd_float4x4) -> SIMD3<Float> {
         // In a column-major 4x4 matrix, column 2 represents the z-axis.
         // Negating it gives the forward direction in many ARKit/RealityKit setups.
