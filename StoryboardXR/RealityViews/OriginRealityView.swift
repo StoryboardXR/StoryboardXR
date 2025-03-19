@@ -34,7 +34,7 @@ struct OriginRealityView: View {
       // Keep reference to it in app state.
       appModel.originEntity = loadedOriginEntity
     }
-    .onAppear{
+    .onAppear {
       appModel.shots.append(ShotModel(appModel: appModel))
     }
     .gesture(positionGesture)
@@ -44,22 +44,29 @@ struct OriginRealityView: View {
   // MARK: Orientation gestures
   var positionGesture: some Gesture {
     DragGesture()
-      .targetedToAnyEntity()
+      .targetedToEntity(appModel.originEntity ?? Entity())
       .onChanged({ gesture in
         // Drag gesture root entity.
-        let rootEntity = gesture.entity.parent!
+        let maybeRootEntity = gesture.entity.parent
 
-        // Capture initial position.
-        if self.initialPosition == nil {
-          self.initialPosition = rootEntity.transform.translation
+        if let rootEntity = maybeRootEntity {
+          // Exit if not the origin entity itself.
+          if rootEntity != appModel.originEntity {
+            return
+          }
+
+          // Capture initial position.
+          if self.initialPosition == nil {
+            self.initialPosition = rootEntity.transform.translation
+          }
+
+          // Compute the drag.
+          let drag = gesture.convert(
+            gesture.translation3D, from: .global, to: .scene)
+
+          // Apply the drag.
+          rootEntity.position = (initialPosition ?? .zero) + drag.grounded
         }
-
-        // Compute the drag.
-        let drag = gesture.convert(
-          gesture.translation3D, from: .global, to: .scene)
-
-        // Apply the drag.
-        rootEntity.position = (initialPosition ?? .zero) + drag.grounded
       })
       .onEnded({ _ in
         // Reset initial position.
@@ -69,22 +76,29 @@ struct OriginRealityView: View {
 
   var rotationGesture: some Gesture {
     RotateGesture3D(constrainedToAxis: .y)
-      .targetedToAnyEntity()
+      .targetedToEntity(appModel.originEntity ?? Entity())
       .onChanged({ gesture in
-        // Rotate gesture root entity.
-        let rootEntity = gesture.entity.parent!
+        // Drag gesture root entity.
+        let maybeRootEntity = gesture.entity.parent
 
-        // Capture initial rotation.
-        if self.initialRotation == nil {
-          self.initialRotation = rootEntity.transform.rotation
+        if let rootEntity = maybeRootEntity {
+          // Exit if not the origin entity itself.
+          if rootEntity != appModel.originEntity {
+            return
+          }
+
+          // Capture initial rotation.
+          if self.initialRotation == nil {
+            self.initialRotation = rootEntity.transform.rotation
+          }
+
+          // Compute the rotation.
+          let rotation = Rotation3D(initialRotation ?? .init()).rotated(
+            by: gesture.rotation)
+
+          // Apply the rotation.
+          rootEntity.transform.rotation = simd_quatf(rotation)
         }
-
-        // Compute the rotation.
-        let rotation = Rotation3D(initialRotation ?? .init()).rotated(
-          by: gesture.rotation)
-
-        // Apply the rotation.
-        rootEntity.transform.rotation = simd_quatf(rotation)
       })
       .onEnded({ _ in
         // Reset initial rotation.

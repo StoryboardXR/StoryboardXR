@@ -22,13 +22,14 @@ struct ShotRealityView: View {
 
   // MARK: Properties
   @State private var controlPanelAttachmentEntity: Entity?
+  @State private var shotFrameEntity: Entity?
 
   // MARK: View
   var body: some View {
     RealityView { content, attachments in
       // Load the entity.
       guard
-        let shotFrameEntity = try? await Entity(
+        let loadedShotFrameEntity = try? await Entity(
           named: SHOT_FRAME_ENTITY_NAME, in: realityKitContentBundle)
       else {
         assertionFailure("Failed to load frame model")
@@ -76,8 +77,13 @@ struct ShotRealityView: View {
               modifiedTransform.translation = offsetPosition
 
               // Apply it to the shot frame.
-              shotFrameEntity.setTransformMatrix(
+              loadedShotFrameEntity.setTransformMatrix(
                 modifiedTransform.matrix, relativeTo: appModel.originEntity)
+
+              // Update the shot model.
+              shotModel.position = modifiedTransform.translation
+              shotModel.rotation = Rotation3D(modifiedTransform.rotation)
+              shotModel.scale = modifiedTransform.scale
             }
           } catch {
             print("Error setting shot frame position: \(error)")
@@ -87,13 +93,14 @@ struct ShotRealityView: View {
         // Mark has been initialized.
         shotModel.needInitialization = false
       } else {
-        shotFrameEntity.position = shotModel.position
-        shotFrameEntity.transform.rotation = simd_quatf(shotModel.rotation)
-        shotFrameEntity.scale = shotModel.scale
+        loadedShotFrameEntity.position = shotModel.position
+        loadedShotFrameEntity.transform.rotation = simd_quatf(
+          shotModel.rotation)
+        loadedShotFrameEntity.scale = shotModel.scale
       }
 
       // Add the shot frame to the world.
-      appModel.originEntity!.addChild(shotFrameEntity)
+      appModel.originEntity!.addChild(loadedShotFrameEntity)
 
       // Add control panel.
       if let controlPanelAttachmentEntity = attachments.entity(
@@ -103,11 +110,14 @@ struct ShotRealityView: View {
         self.controlPanelAttachmentEntity = controlPanelAttachmentEntity
 
         // Add the control panel to the shot frame.
-        shotFrameEntity.addChild(controlPanelAttachmentEntity)
+        loadedShotFrameEntity.addChild(controlPanelAttachmentEntity)
 
         // Position control panel.
-        positionControlPanel(shotFrameEntity: shotFrameEntity)
+        positionControlPanel(shotFrameEntity: loadedShotFrameEntity)
       }
+
+      // Save a reference to the shot frame.
+      shotFrameEntity = loadedShotFrameEntity
     } attachments: {
       Attachment(id: SHOT_CONTROL_PANEL_ATTACHMENT_ID) {
         ShotControlPanelView(shotModel: shotModel).environment(appModel)
@@ -124,37 +134,41 @@ struct ShotRealityView: View {
 
   /// Shot placement.
   var positionGesture: some Gesture {
-    DragGesture().targetedToAnyEntity().onChanged({ gesture in
-      // Exit if locked.
-      if shotModel.orientationLock {
-        return
-      }
+    DragGesture()
+      .targetedToEntity(shotFrameEntity ?? Entity())
+      .onChanged({ gesture in
+        // Exit if locked.
+        if shotModel.orientationLock {
+          return
+        }
 
-      // Get the higher root entity (with the control panel).
-      let rootEntity = gesture.entity.parent!
+        // Get the higher root entity (with the control panel).
+        let rootEntity = gesture.entity.parent!
 
-      // Mark the current position at the start of the drag.
-      if initialPosition == nil {
-        initialPosition = rootEntity.position
-      }
+        // Mark the current position at the start of the drag.
+        if initialPosition == nil {
+          initialPosition = rootEntity.position
+        }
 
-      // Get the drag movement from world space to scene space.
-      let drag = gesture.convert(
-        gesture.translation3D, from: .global, to: .scene)
+        // Get the drag movement from world space to scene space.
+        let drag = gesture.convert(
+          gesture.translation3D, from: .global, to: .scene)
 
-      // Record and apply the position change.
-      let newPosition = (initialPosition ?? .zero) + drag
-      shotModel.position = newPosition
-      rootEntity.position = newPosition
-    }).onEnded({ _ in
-      // Reset the initial position value for the next darg.
-      initialPosition = nil
-    })
+        // Record and apply the position change.
+        let newPosition = (initialPosition ?? .zero) + drag
+        shotModel.position = newPosition
+        rootEntity.position = newPosition
+      }).onEnded({ _ in
+        // Reset the initial position value for the next darg.
+        initialPosition = nil
+      })
   }
 
   /// Shot angle.
   var rotationGesture: some Gesture {
-    RotateGesture3D().targetedToAnyEntity().onChanged({ gesture in
+    RotateGesture3D()
+      .targetedToEntity(shotFrameEntity ?? Entity())
+      .onChanged({ gesture in
       // Exit if locked.
       if shotModel.orientationLock {
         return
@@ -188,7 +202,9 @@ struct ShotRealityView: View {
 
   /// Shot frame scaling.
   var scaleGesture: some Gesture {
-    MagnifyGesture().targetedToAnyEntity().onChanged({ gesture in
+    MagnifyGesture()
+      .targetedToEntity(shotFrameEntity ?? Entity())
+      .onChanged({ gesture in
       // Exit if locked.
       if shotModel.orientationLock {
         return
