@@ -11,6 +11,7 @@ import SwiftUICore
 
 extension Notification.Name {
     static let shouldPlaceFrame = Notification.Name("shouldPlaceFrame")
+    static let couldPlaceFrame = Notification.Name("couldPlaceFrame")
 }
 
 extension HandTrackingSystem {
@@ -34,7 +35,7 @@ struct HandTrackingSystem: System {
     private static var latestRightHand: HandAnchor?
     
     // The tracker for if L shape is engaged
-    private static var LGestureDetected: Bool = false
+    static var LGestureDetected: Bool = false
     
     private static var LGestureChirality: HandAnchor.Chirality? = nil
     
@@ -132,7 +133,7 @@ struct HandTrackingSystem: System {
 
                 // Check for orthogonality with a tolerance.
                 let epsilon: Float = 0.1
-                let degreeMargin: Float = 60.0
+                let degreeMargin: Float = 55.0
                 if abs(angleDegrees) > degreeMargin {
                     //print("Vectors are \"orthogonal\" (L-shape detected).")
                     //print(handAnchor.chirality.description)
@@ -154,6 +155,9 @@ struct HandTrackingSystem: System {
                     } else if !tapGestureDetect && !Self.LTapGestureReleased{
                         Self.LTapGestureReleased = true
                         print("tap is released!")
+                    } else if Self.LGestureDetected && !tapGestureDetect{
+                        NotificationCenter.default.post(name: .couldPlaceFrame, object: lChirality!)
+                        print("hopefully a translucent frame should appear now")
                     }
                 } else {
                     //print("Vectors are not \"orthogonal\".")
@@ -238,7 +242,7 @@ struct HandTrackingSystem: System {
         let thumbTipPos = position(from: handSkeleton.joint(.thumbTip).anchorFromJointTransform)
         let distance = simd_distance(indexTipPos, thumbTipPos)
         // Define a threshold (in meters); adjust as needed.
-        return distance < 0.03
+        return distance < 0.01
     }
     
 
