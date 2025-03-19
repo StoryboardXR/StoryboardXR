@@ -143,9 +143,7 @@ def Xform "Root"
 
     def RealityKitComponent "Collider"
     {
-        uint group = 1
         uniform token info:id = "RealityKit.Collider"
-        uint mask = 4294967295
         token type = "Default"
 
         def RealityKitStruct "Shape"
