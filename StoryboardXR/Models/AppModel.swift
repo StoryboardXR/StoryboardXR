@@ -5,13 +5,15 @@
 //  Created by Kenneth Yang on 2/27/25.
 //
 
+import ARKit
+import RealityFoundation
 import SwiftUI
 
 /// Maintains app-wide state
 @MainActor
 @Observable
 class AppModel {
-  // MARK: Feature modes.
+  // MARK: Feature modes
   enum FeatureMode {
     case switcher
     case storyboard
@@ -20,7 +22,15 @@ class AppModel {
   }
   var featureMode: FeatureMode = .storyboard
 
-  // MARK: Scene state.
+  // MARK: Head tracking
+  let arkitSession = ARKitSession()
+  let worldTrackingProvider = WorldTrackingProvider()
+  
+  // MARK: World position tracking.
+  var shotFrameEntities = Set<Entity>()
+
+  // MARK: Scene state
   var sceneNumber = 1
-  var shots: [ShotModel] = [ShotModel()]
+  var shots: [ShotModel] = []
+  var originEntity: Entity?
 }

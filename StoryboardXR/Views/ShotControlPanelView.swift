@@ -9,11 +9,11 @@ import SwiftUI
 import simd
 
 struct ShotControlPanelView: View {
-  // MARK: Environment.
+  // MARK: Environment
   @Environment(AppModel.self) private var appModel
   @Bindable var shotModel: ShotModel
 
-  // MARK: Properties.
+  // MARK: Properties
   private var rotationBinding: Binding<simd_double3> {
     Binding(
       get: { shotModel.rotation.eulerAngles(order: .xyz).angles },
@@ -26,15 +26,15 @@ struct ShotControlPanelView: View {
 
   @FocusState private var notesFocused: Bool
 
-  // MARK: View.
+  // MARK: View
   var body: some View {
     Form {
       Stepper {
         Text("Shot \(appModel.sceneNumber)\(shotModel.name)").font(.largeTitle)
       } onIncrement: {
-        incrementShotName()
+        shotModel.incrementShotName()
       } onDecrement: {
-        decrementShotName()
+        shotModel.decrementShotName()
       }
 
       Section(header: Text("Orientation")) {
@@ -109,35 +109,6 @@ struct ShotControlPanelView: View {
     .padding()
     .frame(width: 500, height: 500)
     .glassBackgroundEffect()
-  }
-
-  // MARK: Helper functions.
-
-  /// Get all available shot names including this one.
-  var unusedShotNames: [ShotName] {
-    // Generate list of shot names.
-    let currentShotName = shotModel.name
-    let usedNames: Set = Set(
-      appModel.shots.compactMap { shotModel in shotModel.name })
-    return ShotName.allCases.filter { name in
-      name == currentShotName || !usedNames.contains(name)
-    }
-  }
-
-  /// Set shot name to the next lexigraphically available one.
-  func incrementShotName() {
-    shotModel.name =
-      unusedShotNames[
-        (unusedShotNames.firstIndex(of: shotModel.name)! + 1)
-          % unusedShotNames.count]
-  }
-
-  /// Set shot name to the previous lexigraphically available one.
-  func decrementShotName() {
-    shotModel.name =
-      unusedShotNames[
-        (unusedShotNames.firstIndex(of: shotModel.name)! - 1)
-          % unusedShotNames.count]
   }
 }
 
