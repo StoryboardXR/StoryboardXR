@@ -8,6 +8,7 @@
 import RealityKit
 import ARKit
 import SwiftUICore
+import UIKit
 
 extension Notification.Name {
     static let shouldPlaceFrame = Notification.Name("shouldPlaceFrame")
@@ -157,12 +158,53 @@ struct HandTrackingSystem: System {
                         print("tap is released!")
                     } else if Self.LGestureDetected && !tapGestureDetect{
                         NotificationCenter.default.post(name: .couldPlaceFrame, object: lChirality!)
-                        print("hopefully a translucent frame should appear now")
+                        
+                        //Set thumb and finger tips to green indicating L shape
+                        if let thumbTipEntity = handComponent.fingers[.thumbTip],
+                           let indexFingerTipEntity = handComponent.fingers[.indexFingerTip],
+                           var thumbModelComponent = thumbTipEntity.components[ModelComponent.self],
+                           var indexFingerModelComponent = indexFingerTipEntity.components[ModelComponent.self],
+                           var simpleMaterial = thumbModelComponent.materials.first as? SimpleMaterial {
+                            
+                            // Update the material’s tint to have full opacity (alpha = 1.0)
+                            simpleMaterial.color = .init(tint: simpleMaterial.color.tint.withAlphaComponent(1.0),
+                                                           texture: simpleMaterial.color.texture)
+                            
+                            // Replace the first material with the updated one
+                            thumbModelComponent.materials[0] = simpleMaterial
+                            indexFingerModelComponent.materials[0] = simpleMaterial
+                            
+                            // Update the entity’s ModelComponent
+                            thumbTipEntity.components.set(thumbModelComponent)
+                            indexFingerTipEntity.components.set(indexFingerModelComponent)
+                        }
+                        
+                        print("hopefully L should have some visual cue")
                     }
                 } else {
                     //print("Vectors are not \"orthogonal\".")
                     Self.LGestureDetected = false
                     Self.LGestureChirality = nil
+                    //Set thumb and finger tips to green indicating L shape
+                    if let thumbTipEntity = handComponent.fingers[.thumbTip],
+                       let indexFingerTipEntity = handComponent.fingers[.indexFingerTip],
+                       var thumbModelComponent = thumbTipEntity.components[ModelComponent.self],
+                       var indexFingerModelComponent = indexFingerTipEntity.components[ModelComponent.self],
+                       var simpleMaterial = thumbModelComponent.materials.first as? SimpleMaterial {
+                        
+                        // Update the material’s tint to have full opacity (alpha = 1.0)
+                        simpleMaterial.color = .init(tint: simpleMaterial.color.tint.withAlphaComponent(0.0),
+                                                       texture: simpleMaterial.color.texture)
+                        
+                        // Replace the first material with the updated one
+                        thumbModelComponent.materials[0] = simpleMaterial
+                        indexFingerModelComponent.materials[0] = simpleMaterial
+                        
+                        // Update the entity’s ModelComponent
+                        thumbTipEntity.components.set(thumbModelComponent)
+                        indexFingerTipEntity.components.set(indexFingerModelComponent)
+                    }
+                    
                 }
                 
                 for (jointName, jointEntity) in handComponent.fingers {
@@ -205,7 +247,9 @@ struct HandTrackingSystem: System {
         let radius: Float = 0.01
 
         /// The material to apply to the sphere entity.
-        let material = SimpleMaterial(color: .purple, isMetallic: false)
+        //let material = SimpleMaterial(color: .purple, isMetallic: false)
+        var material = SimpleMaterial()
+        material.color =  .init(tint: UIColor.green.withAlphaComponent(0.0), texture: nil)
 
         /// The sphere entity that represents a joint in a hand.
         let sphereEntity = ModelEntity(
@@ -214,9 +258,17 @@ struct HandTrackingSystem: System {
         )
 
         // For each joint, create a sphere and attach it to the fingers.
+        
         for bone in Hand.joints {
-            // Add a duplication of the sphere entity to the hand entity.
-            let newJoint = sphereEntity.clone(recursive: false)
+            let newJoint: Entity
+            // Check if the joint is thumbTip or indexTip
+            if bone.0 == .thumbTip || bone.0 == .indexFingerTip {
+                // For thumbTip and indexFingerTip, use the sphere model.
+                newJoint = sphereEntity.clone(recursive: false)
+            } else {
+                // For all other joints, just create an empty entity.
+                newJoint = Entity()
+            }
             print(newJoint.name)
             handEntity.addChild(newJoint)
 
@@ -224,6 +276,7 @@ struct HandTrackingSystem: System {
             print(bone.0)
             handComponent.fingers[bone.0] = newJoint
         }
+         
 
         // Apply the updated hand component back to the hand entity.
         handEntity.components.set(handComponent)

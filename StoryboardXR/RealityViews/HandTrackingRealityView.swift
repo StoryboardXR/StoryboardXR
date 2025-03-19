@@ -23,13 +23,10 @@ struct HandTrackingRealityView: View {
             makeHandEntities(in: content)
         }
         .onReceive(NotificationCenter.default.publisher(for: .shouldPlaceFrame)) { notification in
-            if let chirality = notification.object as? HandAnchor.Chirality,
-               let content = sceneContent {
-                //Woohooo sphere spawning works on special gesture, let's get some frames loaded in based off this
-                appModel.shots.append(ShotModel())
-                print(appModel.shots)
-                print("Should be spawning in another frame...")
-            }
+            //Woohooo sphere spawning works on special gesture, let's get some frames loaded in based off this
+            appModel.shots.append(ShotModel())
+            print(appModel.shots)
+            print("Should be spawning in another frame...")
         }
     }
 
