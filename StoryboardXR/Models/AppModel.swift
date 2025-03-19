@@ -20,7 +20,8 @@ class AppModel {
     case handTracking
     case blocking
   }
-  var featureMode: FeatureMode = .storyboard
+  
+  var featureMode: FeatureMode = .switcher
 
   // MARK: Head tracking
   let arkitSession = ARKitSession()
