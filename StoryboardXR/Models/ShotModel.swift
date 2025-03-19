@@ -8,6 +8,7 @@
 import Foundation
 import Spatial
 import simd
+import RealityFoundation
 
 @MainActor
 @Observable
@@ -17,12 +18,9 @@ class ShotModel: @preconcurrency Identifiable {
 
   var name: ShotName = .unnamed
   var needInitialization: Bool = true
-
   var orientationLock: Bool = false
 
-  var position: SIMD3<Float> = .zero
-  var rotation: Rotation3D = .identity
-  var scale: SIMD3<Float> = .one
+  var transform: Transform = .identity
 
   var notes: String = ""
 

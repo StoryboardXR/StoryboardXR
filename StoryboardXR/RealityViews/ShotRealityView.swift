@@ -78,9 +78,7 @@ struct ShotRealityView: View {
               modifiedTransform.matrix, relativeTo: appModel.originEntity)
 
             // Update the shot model.
-            shotModel.position = modifiedTransform.translation
-            shotModel.rotation = Rotation3D(modifiedTransform.rotation)
-            shotModel.scale = modifiedTransform.scale
+            shotModel.transform = modifiedTransform
           } catch {
             print("Error setting shot frame position: \(error)")
           }
@@ -89,10 +87,7 @@ struct ShotRealityView: View {
         // Mark has been initialized.
         shotModel.needInitialization = false
       } else {
-        shotFrameEntity.position = shotModel.position
-        shotFrameEntity.transform.rotation = simd_quatf(
-          shotModel.rotation)
-        shotFrameEntity.scale = shotModel.scale
+        shotFrameEntity.transform = shotModel.transform
       }
 
       // Add the shot frame to the world.
@@ -153,7 +148,7 @@ struct ShotRealityView: View {
 
         // Record and apply the position change.
         let newPosition = (initialPosition ?? .zero) + drag
-        shotModel.position = newPosition
+        shotModel.transform.translation = newPosition
         rootEntity.position = newPosition
       }).onEnded({ _ in
         // Reset the initial position value for the next darg.
@@ -188,10 +183,11 @@ struct ShotRealityView: View {
           angle: angle, axis: RotationAxis3D(x: -axis.x, y: axis.y, z: -axis.z))
 
         // Apply to entity.
-        let newRotation = Rotation3D(initialRotation ?? .init()).rotated(
-          by: flippedRotation)
-        shotModel.rotation = newRotation
-        rootEntity.transform.rotation = simd_quatf(newRotation)
+        let newRotation = simd_quatf(
+          Rotation3D(initialRotation ?? .init()).rotated(
+            by: flippedRotation))
+        shotModel.transform.rotation = newRotation
+        rootEntity.transform.rotation = newRotation
       }).onEnded({ _ in
         initialRotation = nil
       })
@@ -221,7 +217,7 @@ struct ShotRealityView: View {
         let newScale =
           (initialScale ?? .init(repeating: scaleRate))
           * Float(gesture.gestureValue.magnification)
-        shotModel.scale = newScale
+        shotModel.transform.scale = newScale
         rootEntity.scale = newScale
 
         // Update the control panel's position
