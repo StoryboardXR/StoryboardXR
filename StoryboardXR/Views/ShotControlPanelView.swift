@@ -114,6 +114,6 @@ struct ShotControlPanelView: View {
 
 #Preview(windowStyle: .plain) {
   let appModel = AppModel()
-  ShotControlPanelView(shotModel: appModel.shots[0])
+  ShotControlPanelView(shotModel: ShotModel(appModel: appModel))
     .environment(appModel)
 }
