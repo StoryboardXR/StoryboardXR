@@ -37,10 +37,10 @@ struct ShotRealityView: View {
       // Create a head anchor to place the shot frame.
       let headAnchor = AnchorEntity(.head)
       headAnchor.anchoring.trackingMode = .once
-      appModel.originEntity?.addChild(headAnchor)
+      content.add(headAnchor)
       
       // Place the shot frame in front of the user.
-      shotFrameEntity.setPosition([0, 0, -0.6], relativeTo: headAnchor)
+      shotFrameEntity.setPosition([0, -0.05, -0.6], relativeTo: headAnchor)
       headAnchor.addChild(shotFrameEntity)
 
       // Add control panel.
