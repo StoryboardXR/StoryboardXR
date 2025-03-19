@@ -43,8 +43,8 @@ struct OriginRealityView: View {
     DragGesture()
       .targetedToAnyEntity()
       .onChanged({ gesture in
-        // Drag gesture entity.
-        let rootEntity = gesture.entity
+        // Drag gesture root entity.
+        let rootEntity = gesture.entity.parent!
 
         // Capture initial position.
         if self.initialPosition == nil {
@@ -68,8 +68,8 @@ struct OriginRealityView: View {
     RotateGesture3D(constrainedToAxis: .y)
       .targetedToAnyEntity()
       .onChanged({ gesture in
-        // Rotate gesture entity.
-        let rootEntity = gesture.entity
+        // Rotate gesture root entity.
+        let rootEntity = gesture.entity.parent!
 
         // Capture initial rotation.
         if self.initialRotation == nil {
