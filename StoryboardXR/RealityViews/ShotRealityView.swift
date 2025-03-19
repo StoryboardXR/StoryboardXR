@@ -20,16 +20,12 @@ struct ShotRealityView: View {
   @State private var initialScale: SIMD3<Float>? = nil
   @State private var initialRotation: simd_quatf? = nil
 
-  // MARK: Properties
-  @State private var controlPanelAttachmentEntity: Entity?
-  @State private var shotFrameEntity: Entity?
-
   // MARK: View
   var body: some View {
     RealityView { content, attachments in
       // Load the entity.
       guard
-        let loadedShotFrameEntity = try? await Entity(
+        let shotFrameEntity = try? await Entity(
           named: SHOT_FRAME_ENTITY_NAME, in: realityKitContentBundle)
       else {
         assertionFailure("Failed to load frame model")
@@ -44,47 +40,42 @@ struct ShotRealityView: View {
             if appModel.worldTrackingProvider.state != .running {
               try await appModel.arkitSession.run([
                 appModel.worldTrackingProvider
-              ]
-              )
+              ])
             }
 
-            // Get the current device position.
-            let maybeDeviceAnchor = appModel.worldTrackingProvider
-              .queryDeviceAnchor(
-                atTimestamp: CACurrentMediaTime())
+            // Get the current device transform.
+            guard
+              let deviceAnchor = appModel.worldTrackingProvider
+                .queryDeviceAnchor(atTimestamp: CACurrentMediaTime())
+            else { return }
+            let deviceMatrix = deviceAnchor.originFromAnchorTransform
+            let deviceTransform = Transform(matrix: deviceMatrix)
 
-            // Using the device position, compute a pose in front of the user.
-            if let deviceAnchor = maybeDeviceAnchor {
-              // Get device transform.
-              let deviceMatrix = deviceAnchor.originFromAnchorTransform
-              let deviceTransform = Transform(matrix: deviceMatrix)
+            // Get the forward and down vectors.
+            let forwardVector = SIMD3<Float>(
+              -deviceMatrix.columns.2.x, -deviceMatrix.columns.2.y,
+              -deviceMatrix.columns.2.z)
+            let downVector = SIMD3<Float>(
+              -deviceMatrix.columns.1.x, -deviceMatrix.columns.1.y,
+              -deviceMatrix.columns.1.z)
 
-              // Get the forward and down vectors.
-              let forwardVector = SIMD3<Float>(
-                -deviceMatrix.columns.2.x, -deviceMatrix.columns.2.y,
-                -deviceMatrix.columns.2.z)
-              let downVector = SIMD3<Float>(
-                -deviceMatrix.columns.1.x, -deviceMatrix.columns.1.y,
-                -deviceMatrix.columns.1.z)
+            // Get the position in front of the user's face.
+            let offsetPosition =
+              deviceTransform.translation + (forwardVector * 0.6)
+              + (downVector * 0.2)
 
-              // Get the position in front of the user's face.
-              let offsetPosition =
-                deviceTransform.translation + (forwardVector * 0.6)
-                + (downVector * 0.2)
+            // Create this transform.
+            var modifiedTransform = deviceTransform
+            modifiedTransform.translation = offsetPosition
 
-              // Create this transform.
-              var modifiedTransform = deviceTransform
-              modifiedTransform.translation = offsetPosition
+            // Apply it to the shot frame.
+            shotFrameEntity.setTransformMatrix(
+              modifiedTransform.matrix, relativeTo: appModel.originEntity)
 
-              // Apply it to the shot frame.
-              loadedShotFrameEntity.setTransformMatrix(
-                modifiedTransform.matrix, relativeTo: appModel.originEntity)
-
-              // Update the shot model.
-              shotModel.position = modifiedTransform.translation
-              shotModel.rotation = Rotation3D(modifiedTransform.rotation)
-              shotModel.scale = modifiedTransform.scale
-            }
+            // Update the shot model.
+            shotModel.position = modifiedTransform.translation
+            shotModel.rotation = Rotation3D(modifiedTransform.rotation)
+            shotModel.scale = modifiedTransform.scale
           } catch {
             print("Error setting shot frame position: \(error)")
           }
@@ -93,31 +84,32 @@ struct ShotRealityView: View {
         // Mark has been initialized.
         shotModel.needInitialization = false
       } else {
-        loadedShotFrameEntity.position = shotModel.position
-        loadedShotFrameEntity.transform.rotation = simd_quatf(
+        shotFrameEntity.position = shotModel.position
+        shotFrameEntity.transform.rotation = simd_quatf(
           shotModel.rotation)
-        loadedShotFrameEntity.scale = shotModel.scale
+        shotFrameEntity.scale = shotModel.scale
       }
 
       // Add the shot frame to the world.
-      appModel.originEntity!.addChild(loadedShotFrameEntity)
-
-      // Add control panel.
-      if let controlPanelAttachmentEntity = attachments.entity(
-        for: SHOT_CONTROL_PANEL_ATTACHMENT_ID)
-      {
-        // Save reference to panel.
-        self.controlPanelAttachmentEntity = controlPanelAttachmentEntity
-
-        // Add the control panel to the shot frame.
-        loadedShotFrameEntity.addChild(controlPanelAttachmentEntity)
-
-        // Position control panel.
-        positionControlPanel(shotFrameEntity: loadedShotFrameEntity)
-      }
+      content.add(shotFrameEntity)
 
       // Save a reference to the shot frame.
-      shotFrameEntity = loadedShotFrameEntity
+      appModel.shotFrameEntities.insert(shotFrameEntity)
+
+      // Add control panel.
+      guard
+        let controlPanelAttachmentEntity = attachments.entity(
+          for: SHOT_CONTROL_PANEL_ATTACHMENT_ID)
+      else { return }
+      shotFrameEntity.addChild(controlPanelAttachmentEntity)
+      
+      // Position it to the right of the frame.
+      controlPanelAttachmentEntity.setPosition(
+        [
+          shotFrameEntity.visualBounds(relativeTo: nil).boundingRadius
+            + controlPanelAttachmentEntity.visualBounds(relativeTo: nil)
+            .boundingRadius, 0, 0,
+        ], relativeTo: shotFrameEntity)
     } attachments: {
       Attachment(id: SHOT_CONTROL_PANEL_ATTACHMENT_ID) {
         ShotControlPanelView(shotModel: shotModel).environment(appModel)
@@ -135,7 +127,7 @@ struct ShotRealityView: View {
   /// Shot placement.
   var positionGesture: some Gesture {
     DragGesture()
-      .targetedToEntity(shotFrameEntity ?? Entity())
+      .targetedToAnyEntity()
       .onChanged({ gesture in
         // Exit if locked.
         if shotModel.orientationLock {
@@ -167,89 +159,71 @@ struct ShotRealityView: View {
   /// Shot angle.
   var rotationGesture: some Gesture {
     RotateGesture3D()
-      .targetedToEntity(shotFrameEntity ?? Entity())
+      .targetedToAnyEntity()
       .onChanged({ gesture in
-      // Exit if locked.
-      if shotModel.orientationLock {
-        return
-      }
+        // Exit if locked.
+        if shotModel.orientationLock {
+          return
+        }
 
-      // Get the higher root entity (with the control panel).
-      let rootEntity = gesture.entity.parent!
+        // Get the higher root entity (with the control panel).
+        let rootEntity = gesture.entity.parent!
 
-      // Mark the current rotation at the start of the gesture.
-      if initialRotation == nil {
-        initialRotation = rootEntity.transform.rotation
-      }
+        // Mark the current rotation at the start of the gesture.
+        if initialRotation == nil {
+          initialRotation = rootEntity.transform.rotation
+        }
 
-      // Extract angle and axis.
-      let axis = gesture.rotation.axis
-      let angle = gesture.rotation.angle
+        // Extract angle and axis.
+        let axis = gesture.rotation.axis
+        let angle = gesture.rotation.angle
 
-      // Flip the X and Z rotations.
-      let flippedRotation = Rotation3D(
-        angle: angle, axis: RotationAxis3D(x: -axis.x, y: axis.y, z: -axis.z))
+        // Flip the X and Z rotations.
+        let flippedRotation = Rotation3D(
+          angle: angle, axis: RotationAxis3D(x: -axis.x, y: axis.y, z: -axis.z))
 
-      // Apply to entity.
-      let newRotation = Rotation3D(initialRotation ?? .init()).rotated(
-        by: flippedRotation)
-      shotModel.rotation = newRotation
-      rootEntity.transform.rotation = simd_quatf(newRotation)
-    }).onEnded({ _ in
-      initialRotation = nil
-    })
+        // Apply to entity.
+        let newRotation = Rotation3D(initialRotation ?? .init()).rotated(
+          by: flippedRotation)
+        shotModel.rotation = newRotation
+        rootEntity.transform.rotation = simd_quatf(newRotation)
+      }).onEnded({ _ in
+        initialRotation = nil
+      })
   }
 
   /// Shot frame scaling.
   var scaleGesture: some Gesture {
     MagnifyGesture()
-      .targetedToEntity(shotFrameEntity ?? Entity())
+      .targetedToAnyEntity()
       .onChanged({ gesture in
-      // Exit if locked.
-      if shotModel.orientationLock {
-        return
-      }
+        // Exit if locked.
+        if shotModel.orientationLock {
+          return
+        }
 
-      // Get the root entity but not the parent with the control panel.
-      let rootEntity = gesture.entity.parent!
+        // Get the root entity but not the parent with the control panel.
+        let rootEntity = gesture.entity.parent!
 
-      // Mark the current scale at the start of the scale.
-      if initialScale == nil {
-        initialScale = rootEntity.scale
-      }
+        // Mark the current scale at the start of the scale.
+        if initialScale == nil {
+          initialScale = rootEntity.scale
+        }
 
-      let scaleRate: Float = 1.0
+        let scaleRate: Float = 1.0
 
-      // Apply the scaling.
-      let newScale =
-        (initialScale ?? .init(repeating: scaleRate))
-        * Float(gesture.gestureValue.magnification)
-      shotModel.scale = newScale
-      rootEntity.scale = newScale
+        // Apply the scaling.
+        let newScale =
+          (initialScale ?? .init(repeating: scaleRate))
+          * Float(gesture.gestureValue.magnification)
+        shotModel.scale = newScale
+        rootEntity.scale = newScale
 
-      // Update the control panel's position
-      //      positionControlPanel(shotFrameEntity: rootEntity.parent)
-    }).onEnded({ _ in
-      // Reset the initial scale for the next scale.
-      initialScale = nil
-    })
-  }
-
-  // MARK: Helper functions
-
-  /// Position the control panel attachment entity next to the frame.
-  func positionControlPanel(shotFrameEntity: Entity) {
-    // Exit if no control panel exist.
-    if let unwrappedControlPanelAttachmentEntity = controlPanelAttachmentEntity
-    {
-      unwrappedControlPanelAttachmentEntity.setPosition(
-        [
-          shotFrameEntity.visualBounds(relativeTo: nil).boundingRadius
-            + unwrappedControlPanelAttachmentEntity.visualBounds(
-              relativeTo: nil
-            )
-            .boundingRadius, 0, 0,
-        ], relativeTo: shotFrameEntity)
-    }
+        // Update the control panel's position
+        //      positionControlPanel(shotFrameEntity: rootEntity.parent)
+      }).onEnded({ _ in
+        // Reset the initial scale for the next scale.
+        initialScale = nil
+      })
   }
 }

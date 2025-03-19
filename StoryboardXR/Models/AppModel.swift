@@ -25,6 +25,9 @@ class AppModel {
   // MARK: Head tracking
   let arkitSession = ARKitSession()
   let worldTrackingProvider = WorldTrackingProvider()
+  
+  // MARK: World position tracking.
+  var shotFrameEntities = Set<Entity>()
 
   // MARK: Scene state
   var sceneNumber = 1
