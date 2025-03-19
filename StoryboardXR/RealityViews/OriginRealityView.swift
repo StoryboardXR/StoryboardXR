@@ -27,12 +27,12 @@ struct OriginRealityView: View {
         assertionFailure("Failed to load origin model")
         return
       }
-      
-      // Keep reference to it in app state.
-      appModel.originEntity = loadedOriginEntity
 
       // Add to the scene.
-      content.add(appModel.originEntity!)
+      content.add(loadedOriginEntity)
+
+      // Keep reference to it in app state.
+      appModel.originEntity = loadedOriginEntity
     }
     .gesture(positionGesture)
     .gesture(rotationGesture)

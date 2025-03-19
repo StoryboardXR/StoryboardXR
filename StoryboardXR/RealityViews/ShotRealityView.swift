@@ -5,6 +5,7 @@
 //  Created by Kenneth Yang on 3/5/25.
 //
 
+import ARKit
 import RealityKit
 import RealityKitContent
 import SwiftUI
@@ -21,6 +22,8 @@ struct ShotRealityView: View {
 
   // MARK: Properties.
   @State private var controlPanelAttachmentEntity: Entity?
+  private let arkitSession = ARKitSession()
+  private let worldTrackingProvider = WorldTrackingProvider()
 
   // MARK: View.
   var body: some View {
@@ -33,15 +36,9 @@ struct ShotRealityView: View {
         assertionFailure("Failed to load frame model")
         return
       }
-      
-      // Create a head anchor to place the shot frame.
-      let headAnchor = AnchorEntity(.head)
-      headAnchor.anchoring.trackingMode = .once
-      content.add(headAnchor)
-      
-      // Place the shot frame in front of the user.
-      shotFrameEntity.setPosition([0, -0.05, -0.6], relativeTo: headAnchor)
-      headAnchor.addChild(shotFrameEntity)
+
+      // Add the shot frame to the world.
+      appModel.originEntity?.addChild(shotFrameEntity)
 
       // Add control panel.
       if let controlPanelAttachmentEntity = attachments.entity(
@@ -55,6 +52,39 @@ struct ShotRealityView: View {
 
         // Position control panel.
         positionControlPanel(shotFrameEntity: shotFrameEntity)
+      }
+
+      Task {
+        do {
+          try await arkitSession.run([worldTrackingProvider])
+
+          let maybeDeviceAnchor = worldTrackingProvider.queryDeviceAnchor(
+            atTimestamp: CACurrentMediaTime())
+
+          if let deviceAnchor = maybeDeviceAnchor {
+            let deviceMatrix = deviceAnchor.originFromAnchorTransform
+            let deviceTransform = Transform(matrix: deviceMatrix)
+
+            let forwardVector = SIMD3<Float>(
+              -deviceMatrix.columns.2.x, -deviceMatrix.columns.2.y,
+              -deviceMatrix.columns.2.z)
+            let downVector = SIMD3<Float>(
+              -deviceMatrix.columns.1.x, -deviceMatrix.columns.1.y,
+              -deviceMatrix.columns.1.z)
+
+            let offsetPosition =
+              deviceTransform.translation + (forwardVector * 0.6)
+              + (downVector * 0.2)
+
+            var modifiedTransform = deviceTransform
+            modifiedTransform.translation = offsetPosition
+
+            shotFrameEntity.setTransformMatrix(
+              modifiedTransform.matrix, relativeTo: appModel.originEntity)
+          }
+        } catch {
+          print("Error setting shot frame position: \(error)")
+        }
       }
     } attachments: {
       Attachment(id: SHOT_CONTROL_PANEL_ATTACHMENT_ID) {
@@ -160,7 +190,7 @@ struct ShotRealityView: View {
       rootEntity.scale = newScale
 
       // Update the control panel's position
-//      positionControlPanel(shotFrameEntity: rootEntity.parent)
+      //      positionControlPanel(shotFrameEntity: rootEntity.parent)
     }).onEnded({ _ in
       // Reset the initial scale for the next scale.
       initialScale = nil
