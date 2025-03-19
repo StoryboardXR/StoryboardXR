@@ -10,7 +10,7 @@ import SwiftUI
 @main
 struct StoryboardXRApp: App {
 
-  // MARK: States.
+  // MARK: States
   @State private var appModel = AppModel()
 
   var body: some Scene {

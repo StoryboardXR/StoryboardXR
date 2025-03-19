@@ -10,10 +10,10 @@ import RealityKitContent
 import SwiftUI
 
 struct OriginRealityView: View {
-  // MARK: Environment.
+  // MARK: Environment
   @Environment(AppModel.self) private var appModel
 
-  // MARK: Gesture start markers.
+  // MARK: Gesture start markers
   @State private var initialPosition: SIMD3<Float>? = nil
   @State private var initialRotation: simd_quatf? = nil
 
@@ -34,11 +34,14 @@ struct OriginRealityView: View {
       // Keep reference to it in app state.
       appModel.originEntity = loadedOriginEntity
     }
+    .onAppear{
+      appModel.shots.append(ShotModel(appModel: appModel))
+    }
     .gesture(positionGesture)
     .gesture(rotationGesture)
   }
 
-  // MARK: Orientation gestures.
+  // MARK: Orientation gestures
   var positionGesture: some Gesture {
     DragGesture()
       .targetedToAnyEntity()

@@ -11,21 +11,19 @@ import RealityKitContent
 import SwiftUI
 
 struct ShotRealityView: View {
-  // MARK: Environment.
+  // MARK: Environment
   @Environment(AppModel.self) private var appModel
   var shotModel: ShotModel
 
-  // MARK: Gesture start markers.
+  // MARK: Gesture start markers
   @State private var initialPosition: SIMD3<Float>? = nil
   @State private var initialScale: SIMD3<Float>? = nil
   @State private var initialRotation: simd_quatf? = nil
 
-  // MARK: Properties.
+  // MARK: Properties
   @State private var controlPanelAttachmentEntity: Entity?
-  private let arkitSession = ARKitSession()
-  private let worldTrackingProvider = WorldTrackingProvider()
 
-  // MARK: View.
+  // MARK: View
   var body: some View {
     RealityView { content, attachments in
       // Load the entity.
@@ -37,8 +35,65 @@ struct ShotRealityView: View {
         return
       }
 
+      // Initialize or pull existing transform.
+      if shotModel.needInitialization {
+        Task {
+          do {
+            // Ensure the tracking system is running.
+            if appModel.worldTrackingProvider.state != .running {
+              try await appModel.arkitSession.run([
+                appModel.worldTrackingProvider
+              ]
+              )
+            }
+
+            // Get the current device position.
+            let maybeDeviceAnchor = appModel.worldTrackingProvider
+              .queryDeviceAnchor(
+                atTimestamp: CACurrentMediaTime())
+
+            // Using the device position, compute a pose in front of the user.
+            if let deviceAnchor = maybeDeviceAnchor {
+              // Get device transform.
+              let deviceMatrix = deviceAnchor.originFromAnchorTransform
+              let deviceTransform = Transform(matrix: deviceMatrix)
+
+              // Get the forward and down vectors.
+              let forwardVector = SIMD3<Float>(
+                -deviceMatrix.columns.2.x, -deviceMatrix.columns.2.y,
+                -deviceMatrix.columns.2.z)
+              let downVector = SIMD3<Float>(
+                -deviceMatrix.columns.1.x, -deviceMatrix.columns.1.y,
+                -deviceMatrix.columns.1.z)
+
+              // Get the position in front of the user's face.
+              let offsetPosition =
+                deviceTransform.translation + (forwardVector * 0.6)
+                + (downVector * 0.2)
+
+              // Create this transform.
+              var modifiedTransform = deviceTransform
+              modifiedTransform.translation = offsetPosition
+
+              // Apply it to the shot frame.
+              shotFrameEntity.setTransformMatrix(
+                modifiedTransform.matrix, relativeTo: appModel.originEntity)
+            }
+          } catch {
+            print("Error setting shot frame position: \(error)")
+          }
+        }
+
+        // Mark has been initialized.
+        shotModel.needInitialization = false
+      } else {
+        shotFrameEntity.position = shotModel.position
+        shotFrameEntity.transform.rotation = simd_quatf(shotModel.rotation)
+        shotFrameEntity.scale = shotModel.scale
+      }
+
       // Add the shot frame to the world.
-      appModel.originEntity?.addChild(shotFrameEntity)
+      appModel.originEntity!.addChild(shotFrameEntity)
 
       // Add control panel.
       if let controlPanelAttachmentEntity = attachments.entity(
@@ -53,39 +108,6 @@ struct ShotRealityView: View {
         // Position control panel.
         positionControlPanel(shotFrameEntity: shotFrameEntity)
       }
-
-      Task {
-        do {
-          try await arkitSession.run([worldTrackingProvider])
-
-          let maybeDeviceAnchor = worldTrackingProvider.queryDeviceAnchor(
-            atTimestamp: CACurrentMediaTime())
-
-          if let deviceAnchor = maybeDeviceAnchor {
-            let deviceMatrix = deviceAnchor.originFromAnchorTransform
-            let deviceTransform = Transform(matrix: deviceMatrix)
-
-            let forwardVector = SIMD3<Float>(
-              -deviceMatrix.columns.2.x, -deviceMatrix.columns.2.y,
-              -deviceMatrix.columns.2.z)
-            let downVector = SIMD3<Float>(
-              -deviceMatrix.columns.1.x, -deviceMatrix.columns.1.y,
-              -deviceMatrix.columns.1.z)
-
-            let offsetPosition =
-              deviceTransform.translation + (forwardVector * 0.6)
-              + (downVector * 0.2)
-
-            var modifiedTransform = deviceTransform
-            modifiedTransform.translation = offsetPosition
-
-            shotFrameEntity.setTransformMatrix(
-              modifiedTransform.matrix, relativeTo: appModel.originEntity)
-          }
-        } catch {
-          print("Error setting shot frame position: \(error)")
-        }
-      }
     } attachments: {
       Attachment(id: SHOT_CONTROL_PANEL_ATTACHMENT_ID) {
         ShotControlPanelView(shotModel: shotModel).environment(appModel)
@@ -98,7 +120,7 @@ struct ShotRealityView: View {
     )
   }
 
-  // MARK: Orientation gestures.
+  // MARK: Orientation gestures
 
   /// Shot placement.
   var positionGesture: some Gesture {
@@ -197,7 +219,7 @@ struct ShotRealityView: View {
     })
   }
 
-  // MARK: Helper functions.
+  // MARK: Helper functions
 
   /// Position the control panel attachment entity next to the frame.
   func positionControlPanel(shotFrameEntity: Entity) {

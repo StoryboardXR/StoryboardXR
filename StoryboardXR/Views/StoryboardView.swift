@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct StoryboardView: View {
-  // MARK: Environment.
+  // MARK: Environment
   @Environment(AppModel.self) private var appModel
   @Environment(\.openImmersiveSpace) var openImmersiveSpace
   @Environment(\.dismissImmersiveSpace) var dismissImmersiveSpace
@@ -22,7 +22,7 @@ struct StoryboardView: View {
     }
     .padding()
 
-    // MARK: Immersive space handler.
+    // MARK: Immersive space handler
     .onAppear {
       Task {
         await openImmersiveSpace(id: STORYBOARD_SPACE_ID)
