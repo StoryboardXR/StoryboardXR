@@ -41,6 +41,11 @@ struct ShotRealityView: View {
               try await appModel.arkitSession.run([
                 appModel.worldTrackingProvider
               ])
+
+              // Wait until it is running.
+              while appModel.worldTrackingProvider.state != .running {
+                try await Task.sleep(for: .milliseconds(100))
+              }
             }
 
             // Get the current device transform.
@@ -102,7 +107,7 @@ struct ShotRealityView: View {
           for: SHOT_CONTROL_PANEL_ATTACHMENT_ID)
       else { return }
       shotFrameEntity.addChild(controlPanelAttachmentEntity)
-      
+
       // Position it to the right of the frame.
       controlPanelAttachmentEntity.setPosition(
         [
