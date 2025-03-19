@@ -20,7 +20,7 @@ class AppModel {
   }
   // MARK: Scene state.
   var sceneNumber = 1
-  var shots: [ShotModel] = [ShotModel()]
+  var shots: [ShotModel] = []
   var featureMode: FeatureMode = .switcher
     
     
