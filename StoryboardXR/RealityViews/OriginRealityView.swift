@@ -52,6 +52,11 @@ struct OriginRealityView: View {
         // Capture initial position.
         if self.initialPosition == nil {
           self.initialPosition = rootEntity.transform.translation
+
+          // Parent shot frames.
+          for shotFrameEntity in appModel.shotFrameEntities {
+            shotFrameEntity.setParent(appModel.originEntity, preservingWorldTransform: true)
+          }
         }
 
         // Compute the drag.
@@ -64,6 +69,11 @@ struct OriginRealityView: View {
       .onEnded({ _ in
         // Reset initial position.
         initialPosition = nil
+
+        // Remove shot frames.
+        for shotFrameEntity in appModel.shotFrameEntities {
+          shotFrameEntity.setParent(nil, preservingWorldTransform: true)
+        }
       })
   }
 
