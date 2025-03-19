@@ -16,6 +16,7 @@ struct OriginRealityView: View {
   // MARK: Gesture start markers
   @State private var initialPosition: SIMD3<Float>? = nil
   @State private var initialRotation: simd_quatf? = nil
+  @State private var shotFrameEntityParent: Entity? = nil
 
   var body: some View {
     RealityView { content in
@@ -49,13 +50,21 @@ struct OriginRealityView: View {
         // Drag gesture root entity.
         guard let rootEntity = gesture.entity.parent else { return }
 
-        // Capture initial position.
+        // Gesture setup.
         if self.initialPosition == nil {
+          // Capture initial position.
           self.initialPosition = rootEntity.transform.translation
 
           // Parent shot frames.
           for shotFrameEntity in appModel.shotFrameEntities {
-            shotFrameEntity.setParent(appModel.originEntity, preservingWorldTransform: true)
+            // Record parent to return to later.
+            if shotFrameEntityParent == nil {
+              shotFrameEntityParent = shotFrameEntity.parent!
+            }
+
+            // Parent it.
+            shotFrameEntity.setParent(
+              appModel.originEntity, preservingWorldTransform: true)
           }
         }
 
@@ -70,10 +79,14 @@ struct OriginRealityView: View {
         // Reset initial position.
         initialPosition = nil
 
-        // Remove shot frames.
+        // Unparent shot frames.
         for shotFrameEntity in appModel.shotFrameEntities {
-          shotFrameEntity.setParent(nil, preservingWorldTransform: true)
+          shotFrameEntity.setParent(
+            shotFrameEntityParent, preservingWorldTransform: true)
         }
+        
+        // Reset shot frame parent (this is not necessary, but is done for consistency).
+        shotFrameEntityParent = nil
       })
   }
 
@@ -84,9 +97,22 @@ struct OriginRealityView: View {
         // Drag gesture root entity.
         guard let rootEntity = gesture.entity.parent else { return }
 
-        // Capture initial rotation.
+        // Gesture setup.
         if self.initialRotation == nil {
+          // Capture initial rotation.
           self.initialRotation = rootEntity.transform.rotation
+          
+          // Parent shot frames.
+          for shotFrameEntity in appModel.shotFrameEntities {
+            // Record parent to return to later.
+            if shotFrameEntityParent == nil {
+              shotFrameEntityParent = shotFrameEntity.parent!
+            }
+
+            // Parent it.
+            shotFrameEntity.setParent(
+              appModel.originEntity, preservingWorldTransform: true)
+          }
         }
 
         // Compute the rotation.
@@ -99,6 +125,15 @@ struct OriginRealityView: View {
       .onEnded({ _ in
         // Reset initial rotation.
         initialRotation = nil
+        
+        // Unparent shot frames.
+        for shotFrameEntity in appModel.shotFrameEntities {
+          shotFrameEntity.setParent(
+            shotFrameEntityParent, preservingWorldTransform: true)
+        }
+        
+        // Reset shot frame parent (this is not necessary, but is done for consistency).
+        shotFrameEntityParent = nil
       })
   }
 }
