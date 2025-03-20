@@ -24,7 +24,7 @@ struct HandTrackingRealityView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .shouldPlaceFrame)) { notification in
             //Woohooo sphere spawning works on special gesture, let's get some frames loaded in based off this
-            appModel.shots.append(ShotModel())
+          appModel.shots.append(ShotModel(appModel: appModel))
             print(appModel.shots)
             print("Should be spawning in another frame...")
         }

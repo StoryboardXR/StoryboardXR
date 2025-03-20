@@ -16,10 +16,12 @@ struct ShotControlPanelView: View {
   // MARK: Properties
   private var rotationBinding: Binding<simd_double3> {
     Binding(
-      get: { shotModel.rotation.eulerAngles(order: .xyz).angles },
+      get: {
+        Rotation3D(shotModel.transform.rotation).eulerAngles(order: .xyz).angles
+      },
       set: {
-        shotModel.rotation = Rotation3D(
-          eulerAngles: EulerAngles(angles: $0, order: .xyz))
+        shotModel.transform.rotation = simd_quatf(
+          Rotation3D(eulerAngles: EulerAngles(angles: $0, order: .xyz)))
       }
     )
   }
@@ -44,15 +46,15 @@ struct ShotControlPanelView: View {
             Text("Position:")
               .gridColumnAlignment(.trailing)
             TextField(
-              "X", value: $shotModel.position.x,
+              "X", value: $shotModel.transform.translation.x,
               format: FloatingPointFormatStyle()
             )
             TextField(
-              "Y", value: $shotModel.position.y,
+              "Y", value: $shotModel.transform.translation.y,
               format: FloatingPointFormatStyle()
             )
             TextField(
-              "Z", value: $shotModel.position.z,
+              "Z", value: $shotModel.transform.translation.z,
               format: FloatingPointFormatStyle()
             )
           }
@@ -80,15 +82,15 @@ struct ShotControlPanelView: View {
             Text("Scale:")
               .gridColumnAlignment(.trailing)
             TextField(
-              "X", value: $shotModel.scale.x,
+              "X", value: $shotModel.transform.scale.x,
               format: FloatingPointFormatStyle()
             )
             TextField(
-              "Y", value: $shotModel.scale.y,
+              "Y", value: $shotModel.transform.scale.y,
               format: FloatingPointFormatStyle()
             )
             TextField(
-              "Z", value: $shotModel.scale.z,
+              "Z", value: $shotModel.transform.scale.z,
               format: FloatingPointFormatStyle()
             )
           }
@@ -114,6 +116,6 @@ struct ShotControlPanelView: View {
 
 #Preview(windowStyle: .plain) {
   let appModel = AppModel()
-  ShotControlPanelView(shotModel: appModel.shots[0])
+  ShotControlPanelView(shotModel: ShotModel(appModel: appModel))
     .environment(appModel)
 }
