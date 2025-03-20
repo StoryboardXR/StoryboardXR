@@ -35,9 +35,6 @@ struct OriginRealityView: View {
       // Keep reference to it in app state.
       appModel.originEntity = loadedOriginEntity
     }
-    .onAppear {
-      appModel.shots.append(ShotModel(appModel: appModel))
-    }
     .gesture(positionGesture)
     .gesture(rotationGesture)
   }

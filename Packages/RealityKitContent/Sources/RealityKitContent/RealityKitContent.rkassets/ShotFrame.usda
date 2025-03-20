@@ -161,5 +161,58 @@ def Xform "Root"
     {
         uniform token info:id = "RealityKit.InputTarget"
     }
+
+    def "frusta" (
+        active = true
+        customData = {
+            float3 rotationEulerHint = (0, 0, 0)
+        }
+        prepend references = @frusta.usdz@
+    )
+    {
+        quatf xformOp:orient = (1, 0, 0, 0)
+        float3 xformOp:scale = (1, 1, 1)
+        float3 xformOp:translate = (-7.799827e-9, 1.15484e-7, 0)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+        over "Cube"
+        {
+            quatf xformOp:orient = (1, 0, 0, 0)
+            float3 xformOp:scale = (1, 1, 1)
+            double3 xformOp:translate = (0, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+            over "Cube_001" (
+                customData = {
+                    float3 rotationEulerHint = (-1.5707964, 0, 0)
+                }
+            )
+            {
+                quatf xformOp:orient = (0.70710677, -0.70710677, 0, 0)
+                float3 xformOp:scale = (0.625, 0.2, 0.35)
+                float3 xformOp:translate = (-4.528556e-8, -2.561137e-8, -0.18330282)
+                uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+            }
+        }
+
+        over "_materials"
+        {
+            over "Material_001"
+            {
+                token outputs:mtlx:surface
+                token outputs:realitykit:vertex
+
+                over "Principled_BSDF"
+                {
+                    color3f inputs:diffuseColor = (0, 0, 0) (
+                        colorSpace = "srgb_texture"
+                    )
+                    float inputs:metallic = 0
+                    float inputs:opacity = 0.5
+                    float inputs:roughness = 1
+                }
+            }
+        }
+    }
 }
 
