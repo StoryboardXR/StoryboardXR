@@ -26,16 +26,34 @@ struct StoryboardView: View {
     VStack {
       Text("Storyboard View").font(.largeTitle)
 
-      HStack {
         Stepper(value: sceneNumberBinding, in: 1...1000) {
           Text("Shot Number: \(appModel.sceneNumber)").font(.title)
         }
-
+      .padding()
+      
+      HStack {
         Button("Save") {
           showSaveAlert = true
         }
+        Button("Load") {
+          let documentsDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
+          let filePath = documentsDirectory.first?.appendingPathComponent("Scene_\(appModel.sceneNumber).json")
+          
+          guard let filePath, FileManager.default.fileExists(atPath: filePath.path(percentEncoded: true)) else {
+            print("Scene slot has not been used yet!")
+            return
+          }
+          
+          do {
+            let data = try Data(contentsOf: filePath)
+            appModel.shots = try JSONDecoder().decode([ShotModel].self, from: data)
+          } catch {
+            print("Failed to decode scene! \(error)")
+          }
+        }
       }
-      .padding()
+      
+      Divider()
 
       Button("Add Frame") {
         appModel.shots.append(ShotModel(appModel: appModel))
@@ -51,14 +69,27 @@ struct StoryboardView: View {
     .frame(width: 500, height: 500)
     .alert("Save Scene?", isPresented: $showSaveAlert) {
       Button("Save", role: .destructive) {
-        print("Saved!")
+        do {
+          // Encode.
+          let encoding = try JSONEncoder().encode(appModel.shots)
+
+          // Get save location.
+          let documentsDirectory = FileManager.default.urls(
+            for: .documentDirectory, in: .userDomainMask)[0]
+          let filePath = documentsDirectory.appendingPathComponent(
+            "Scene_\(appModel.sceneNumber).json")
+
+          // Save.
+          try encoding.write(to: filePath)
+        } catch {
+          print("Unable to encode! \(error)")
+        }
       }
+      
       Button("Cancel", role: .cancel) {}
     } message: {
       Text("Saving a scene overwrites any scene with the same number.")
     }
-
-    // MARK: Immersive space handler
     .onAppear {
       Task {
         await openImmersiveSpace(id: STORYBOARD_SPACE_ID)
