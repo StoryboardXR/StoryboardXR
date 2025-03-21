@@ -42,13 +42,13 @@ class ShotModel: Identifiable, Codable {
   @MainActor
   var unusedShotNames: [ShotName] {
     guard let appModel = appModel else { return [] }
-    
+
     // Generate list of shot names.
     let currentShotName = name
     let usedNames: Set = Set(
       appModel.shots.compactMap { shotModel in shotModel.name })
     return ShotName.allCases.filter { name in
-      name == currentShotName || !usedNames.contains(name)
+      name == currentShotName || (!usedNames.contains(name) && name != .unnamed)
     }
   }
 
@@ -63,10 +63,11 @@ class ShotModel: Identifiable, Codable {
   /// Set shot name to the previous lexigraphically available one.
   @MainActor
   func decrementShotName() {
+    let previousIndex = unusedShotNames.firstIndex(of: name)! - 1
     name =
       unusedShotNames[
-        (unusedShotNames.firstIndex(of: name)! - 1)
-          % unusedShotNames.count]
+        previousIndex < 0
+          ? unusedShotNames.count + previousIndex : previousIndex]
   }
 
   // MARK: Codable
@@ -79,20 +80,20 @@ class ShotModel: Identifiable, Codable {
     case _transform = "transform"
     case _notes = "notes"
   }
-  
+
   /// Decoder. Required to add in appModel reference after
   required init(from decoder: any Decoder) throws {
     id = UUID()
-    
     let values = try decoder.container(keyedBy: CodingKeys.self)
-    
+
     name = try values.decode(ShotName.self, forKey: ._name)
-    needInitialization = try values.decode(Bool.self, forKey: ._needInitialization)
+    needInitialization = try values.decode(
+      Bool.self, forKey: ._needInitialization)
     orientationLock = try values.decode(Bool.self, forKey: ._orientationLock)
     transform = try values.decode(Transform.self, forKey: ._transform)
     notes = try values.decode(String.self, forKey: ._notes)
   }
-  
+
   /// Encode model.
   func encoder(to encoder: Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
@@ -102,5 +103,5 @@ class ShotModel: Identifiable, Codable {
     try container.encode(transform, forKey: ._transform)
     try container.encode(notes, forKey: ._notes)
   }
-  
+
 }

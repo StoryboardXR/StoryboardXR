@@ -69,16 +69,16 @@ struct ShotRealityView: View {
               deviceTransform.translation + (forwardVector * 0.6)
               + (downVector * 0.2)
 
-            // Create this transform.
-            var modifiedTransform = deviceTransform
-            modifiedTransform.translation = offsetPosition
+            // Create offsetted transform.
+            var offsettedDeviceTransform = deviceTransform
+            offsettedDeviceTransform.translation = offsetPosition
 
             // Apply it to the shot frame.
             shotFrameEntity.setTransformMatrix(
-              modifiedTransform.matrix, relativeTo: appModel.originEntity)
-
-            // Update the shot model.
-            shotModel.transform = modifiedTransform
+              offsettedDeviceTransform.matrix, relativeTo: nil)
+            
+            // Compute and save the transform relative to the origin.
+            shotModel.transform = Transform(matrix: shotFrameEntity.transformMatrix(relativeTo: appModel.originEntity))
           } catch {
             print("Error setting shot frame position: \(error)")
           }
@@ -87,7 +87,8 @@ struct ShotRealityView: View {
         // Mark has been initialized.
         shotModel.needInitialization = false
       } else {
-        shotFrameEntity.transform = shotModel.transform
+        print("Add from reload")
+        shotFrameEntity.setTransformMatrix(shotModel.transform.matrix, relativeTo: appModel.originEntity)
       }
 
       // Add the shot frame to the world.
@@ -148,11 +149,14 @@ struct ShotRealityView: View {
 
         // Record and apply the position change.
         let newPosition = (initialPosition ?? .zero) + drag
-        shotModel.transform.translation = newPosition
         rootEntity.position = newPosition
+        shotModel.transform = Transform(matrix: rootEntity.transformMatrix(relativeTo: appModel.originEntity))
       }).onEnded({ _ in
-        // Reset the initial position value for the next darg.
+        // Reset the initial position value for the next drag.
         initialPosition = nil
+
+        // Mark unsaved changes.
+        appModel.unsavedChanges = true
       })
   }
 
@@ -186,10 +190,14 @@ struct ShotRealityView: View {
         let newRotation = simd_quatf(
           Rotation3D(initialRotation ?? .init()).rotated(
             by: flippedRotation))
-        shotModel.transform.rotation = newRotation
         rootEntity.transform.rotation = newRotation
+        shotModel.transform = Transform(matrix: rootEntity.transformMatrix(relativeTo: appModel.originEntity))
       }).onEnded({ _ in
+        // Reset the initial rotation value for the next rotation.
         initialRotation = nil
+
+        // Mark unsaved changes.
+        appModel.unsavedChanges = true
       })
   }
 
@@ -217,14 +225,14 @@ struct ShotRealityView: View {
         let newScale =
           (initialScale ?? .init(repeating: scaleRate))
           * Float(gesture.gestureValue.magnification)
-        shotModel.transform.scale = newScale
         rootEntity.scale = newScale
-
-        // Update the control panel's position
-        //      positionControlPanel(shotFrameEntity: rootEntity.parent)
+        shotModel.transform = Transform(matrix: rootEntity.transformMatrix(relativeTo: appModel.originEntity))
       }).onEnded({ _ in
         // Reset the initial scale for the next scale.
         initialScale = nil
+
+        // Mark unsaved changes.
+        appModel.unsavedChanges = true
       })
   }
 }

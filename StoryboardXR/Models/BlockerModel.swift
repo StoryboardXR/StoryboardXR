@@ -48,7 +48,6 @@ class BlockerModel: Identifiable, Codable {
   /// Decoder. Required to add in appModel reference after
   required init(from decoder: any Decoder) throws {
     id = UUID()
-    
     let values = try decoder.container(keyedBy: CodingKeys.self)
     
     name = try values.decode(String.self, forKey: ._name)

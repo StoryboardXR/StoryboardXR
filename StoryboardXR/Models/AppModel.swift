@@ -32,6 +32,7 @@ class AppModel {
   var blockerEntities = Set<Entity>()
 
   // MARK: Scene state
+  var unsavedChanges = true
   var sceneNumber = 1
   var shots: [ShotModel] = []
   var blockers: [BlockerModel] = []

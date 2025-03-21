@@ -17,7 +17,12 @@ struct StoryboardView: View {
   private var sceneNumberBinding: Binding<Int> {
     Binding(
       get: { appModel.sceneNumber },
-      set: { appModel.sceneNumber = $0 }
+      set: {
+        appModel.sceneNumber = $0
+
+        // Unset loaded scene.
+        loadedScene = nil
+      }
     )
   }
   @State private var showSaveAlert = false
@@ -41,14 +46,13 @@ struct StoryboardView: View {
         Button("Load") {
           let documentsDirectory = FileManager.default.urls(
             for: .documentDirectory, in: .userDomainMask)
-          let filePath = documentsDirectory.first?.appendingPathComponent(
-            "Scene_\(appModel.sceneNumber).json")
-          
+
           let shotFilePath = documentsDirectory.first?.appendingPathComponent(
-            "Scene_\(appModel.sceneNumber)/\(SHOT_FRAME_ENTITY_NAME).json")
-          
-          let blockerFilePath = documentsDirectory.first?.appendingPathComponent(
-            "Scene_\(appModel.sceneNumber)/\(BLOCKER_ENTITY_NAME).json")
+            "Scene_\(appModel.sceneNumber)\(SHOT_FRAME_ENTITY_NAME).json")
+
+          let blockerFilePath = documentsDirectory.first?
+            .appendingPathComponent(
+              "Blocker_\(appModel.sceneNumber)\(BLOCKER_ENTITY_NAME).json")
 
           guard let shotFilePath,
             FileManager.default.fileExists(
@@ -57,7 +61,7 @@ struct StoryboardView: View {
             print("Scene slot has not been used yet!")
             return
           }
-          
+
           guard let blockerFilePath,
             FileManager.default.fileExists(
               atPath: blockerFilePath.path(percentEncoded: true))
@@ -67,18 +71,25 @@ struct StoryboardView: View {
           }
           // If you want to use this you should figure out if it works with
           // the nested folders for blockers and shots and if not, combine them
-          loadedScene = filePath
-          
 
           do {
+            // Reset shot frame entities and load in shots.
             let shotData = try Data(contentsOf: shotFilePath)
+            appModel.shotFrameEntities.removeAll()
             appModel.shots = try JSONDecoder().decode(
               [ShotModel].self, from: shotData)
-            
-            // Might crash if it can't decode (and I haven't tried encode yet)
+
+            // Reset blocker entities and load in shots.
             let blockerData = try Data(contentsOf: blockerFilePath)
+            appModel.blockerEntities.removeAll()
             appModel.blockers = try JSONDecoder().decode(
               [BlockerModel].self, from: blockerData)
+
+            // Remember data file.
+            loadedScene = shotFilePath
+
+            // Mark changes saved.
+            appModel.unsavedChanges = false
           } catch {
             print("Failed to decode scene! \(error)")
           }
@@ -87,20 +98,27 @@ struct StoryboardView: View {
 
       Divider()
 
-      Button("Add Frame") {
-        appModel.shots.append(ShotModel(appModel: appModel))
-      }
-      
-      // New "Add Model" button that shows an options dialog
-      Button("Add Blocker") {
-        showBlockerNamingAlert = true
+      HStack {
+        Button("Add Frame") {
+          appModel.shots.append(ShotModel(appModel: appModel))
+        }
+
+        // New "Add Model" button that shows an options dialog
+        Button("Add Blocker") {
+          showBlockerNamingAlert = true
+        }
       }
 
       Divider()
 
       if let loadedScene = loadedScene {
         ShareLink("Share Scene", item: loadedScene)
-        
+          .disabled(appModel.unsavedChanges)
+
+        if appModel.unsavedChanges {
+          Text("Save changes before sharing!")
+        }
+
         Divider()
       }
 
@@ -116,23 +134,26 @@ struct StoryboardView: View {
           // Encode.
           let encodingShots = try JSONEncoder().encode(appModel.shots)
           let encodingBlockers = try JSONEncoder().encode(appModel.blockers)
-          
 
           // Get save location.
           let documentsDirectory = FileManager.default.urls(
             for: .documentDirectory, in: .userDomainMask)[0]
-          let filePath = documentsDirectory.appendingPathComponent(
-            "Scene_\(appModel.sceneNumber).json")
-          
+
           let shotFilePath = documentsDirectory.appendingPathComponent(
-            "Scene_\(appModel.sceneNumber)/\(SHOT_FRAME_ENTITY_NAME).json")
-          
+            "Scene_\(appModel.sceneNumber)\(SHOT_FRAME_ENTITY_NAME).json")
+
           let blockerFilePath = documentsDirectory.appendingPathComponent(
-            "Scene_\(appModel.sceneNumber)/\(BLOCKER_ENTITY_NAME).json")
+            "Blocker_\(appModel.sceneNumber)\(BLOCKER_ENTITY_NAME).json")
 
           // Save.
           try encodingShots.write(to: shotFilePath)
-          try encodingBlockers.write(to: blockerFilePath) // Might mess up shot encoding so i'm not messing with it yet
+          try encodingBlockers.write(to: blockerFilePath)  // Might mess up shot encoding so i'm not messing with it yet
+
+          // Remember data file.
+          loadedScene = shotFilePath
+
+          // Mark changes saved.
+          appModel.unsavedChanges = false
         } catch {
           print("Unable to encode! \(error)")
         }
@@ -145,8 +166,11 @@ struct StoryboardView: View {
     .alert("Name Your Blocker", isPresented: $showBlockerNamingAlert) {
       TextField("Blocker Name", text: $blockerName)
       Button("Add") {
-        guard !blockerName.trimmingCharacters(in: .whitespaces).isEmpty else { return }
-        appModel.blockers.append(BlockerModel(appModel: appModel, name: blockerName))
+        guard !blockerName.trimmingCharacters(in: .whitespaces).isEmpty else {
+          return
+        }
+        appModel.blockers.append(
+          BlockerModel(appModel: appModel, name: blockerName))
         blockerName = ""
       }
       Button("Cancel", role: .cancel) {}
