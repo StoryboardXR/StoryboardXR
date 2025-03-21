@@ -48,10 +48,10 @@ struct StoryboardView: View {
             for: .documentDirectory, in: .userDomainMask)
           
           let shotFilePath = documentsDirectory.first?.appendingPathComponent(
-            "Scene_\(appModel.sceneNumber)/\(SHOT_FRAME_ENTITY_NAME).json")
+            "Scene_\(appModel.sceneNumber)\(SHOT_FRAME_ENTITY_NAME).json")
           
           let blockerFilePath = documentsDirectory.first?.appendingPathComponent(
-            "Blocker_\(appModel.sceneNumber)/\(BLOCKER_ENTITY_NAME).json")
+            "Blocker_\(appModel.sceneNumber)\(BLOCKER_ENTITY_NAME).json")
 
           guard let shotFilePath,
             FileManager.default.fileExists(
@@ -134,10 +134,10 @@ struct StoryboardView: View {
             for: .documentDirectory, in: .userDomainMask)[0]
           
           let shotFilePath = documentsDirectory.appendingPathComponent(
-            "Scene_\(appModel.sceneNumber)/\(SHOT_FRAME_ENTITY_NAME).json")
+            "Scene_\(appModel.sceneNumber)\(SHOT_FRAME_ENTITY_NAME).json")
           
           let blockerFilePath = documentsDirectory.appendingPathComponent(
-            "Blocker_\(appModel.sceneNumber)/\(BLOCKER_ENTITY_NAME).json")
+            "Blocker_\(appModel.sceneNumber)\(BLOCKER_ENTITY_NAME).json")
 
           // Save.
           try encodingShots.write(to: shotFilePath)
