@@ -87,6 +87,7 @@ struct ShotRealityView: View {
         // Mark has been initialized.
         shotModel.needInitialization = false
       } else {
+        print("Add from reload")
         shotFrameEntity.setTransformMatrix(shotModel.transform.matrix, relativeTo: appModel.originEntity)
       }
 
@@ -148,8 +149,8 @@ struct ShotRealityView: View {
 
         // Record and apply the position change.
         let newPosition = (initialPosition ?? .zero) + drag
-        shotModel.transform.translation = newPosition
         rootEntity.position = newPosition
+        shotModel.transform = Transform(matrix: rootEntity.transformMatrix(relativeTo: appModel.originEntity))
       }).onEnded({ _ in
         // Reset the initial position value for the next drag.
         initialPosition = nil
@@ -189,8 +190,8 @@ struct ShotRealityView: View {
         let newRotation = simd_quatf(
           Rotation3D(initialRotation ?? .init()).rotated(
             by: flippedRotation))
-        shotModel.transform.rotation = newRotation
         rootEntity.transform.rotation = newRotation
+        shotModel.transform = Transform(matrix: rootEntity.transformMatrix(relativeTo: appModel.originEntity))
       }).onEnded({ _ in
         // Reset the initial rotation value for the next rotation.
         initialRotation = nil
@@ -224,11 +225,8 @@ struct ShotRealityView: View {
         let newScale =
           (initialScale ?? .init(repeating: scaleRate))
           * Float(gesture.gestureValue.magnification)
-        shotModel.transform.scale = newScale
         rootEntity.scale = newScale
-
-        // Update the control panel's position
-        //      positionControlPanel(shotFrameEntity: rootEntity.parent)
+        shotModel.transform = Transform(matrix: rootEntity.transformMatrix(relativeTo: appModel.originEntity))
       }).onEnded({ _ in
         // Reset the initial scale for the next scale.
         initialScale = nil

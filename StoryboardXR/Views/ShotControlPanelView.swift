@@ -109,7 +109,7 @@ struct ShotControlPanelView: View {
       }
 
       Button("Remove Shot", role: .destructive) {
-        appModel.shots.removeAll(where: { $0.id == shotModel.id })
+        appModel.shots.removeAll(where: { $0.name == shotModel.name })
       }
     }
     .padding()
