@@ -8,9 +8,11 @@
 // MARK: ID's
 let STORYBOARD_SPACE_ID = "StoryboardSpace"
 let SHOT_CONTROL_PANEL_ATTACHMENT_ID = "ShotControlPanelAttachment"
+let BLOCKER_CONTROL_PANEL_ATTACHMENT_ID = "BlockerControlPanelAttachment"
 
 // MARK: Names
 let SHOT_FRAME_ENTITY_NAME = "ShotFrame"
+let BLOCKER_ENTITY_NAME = "Blocker"
 let ORIGIN_ENTITY_NAME = "Origin"
 
 /// Shot identifying name.
