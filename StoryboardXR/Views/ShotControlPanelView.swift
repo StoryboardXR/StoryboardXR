@@ -28,6 +28,8 @@ struct ShotControlPanelView: View {
 
   @FocusState private var notesFocused: Bool
 
+  @State private var showRemoveAlert: Bool = false
+
   // MARK: View
   var body: some View {
     Form {
@@ -107,10 +109,23 @@ struct ShotControlPanelView: View {
         TextEditor(text: $shotModel.notes)
           .textFieldStyle(.roundedBorder)
       }
+
+      Button("Remove Shot", role: .destructive) {
+        showRemoveAlert = true
+      }
     }
     .padding()
     .frame(width: 500, height: 500)
     .glassBackgroundEffect()
+    .alert("Remove Shot?", isPresented: $showRemoveAlert) {
+      Button("Remove", role: .destructive) {
+        appModel.shots.removeAll(where: { $0.id == shotModel.id })
+      }
+
+      Button("Cancel", role: .cancel) {}
+    } message: {
+      Text("This operation is irreversible.")
+    }
   }
 }
 

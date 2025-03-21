@@ -133,7 +133,6 @@ struct HandTrackingSystem: System {
                 //print("Angle in degrees: \(angleDegrees)")
 
                 // Check for orthogonality with a tolerance.
-                let epsilon: Float = 0.1
                 let degreeMargin: Float = 55.0
                 if abs(angleDegrees) > degreeMargin {
                     //print("Vectors are \"orthogonal\" (L-shape detected).")
@@ -214,7 +213,7 @@ struct HandTrackingSystem: System {
                     //testing standard offset; eventually to be for translating/adjusting frame entities
                     //var testOffsetLeft = Transform(translation: SIMD3<Float>(0.05,0.05,0.05)).matrix
                     //var testOffsetRight = Transform(translation: SIMD3<Float>(0.05,0.05,-0.05)).matrix
-                    var testOffsetLeft = Transform(translation: SIMD3<Float>(0.0,0.0,0.0)).matrix
+                    let testOffsetLeft = Transform(translation: SIMD3<Float>(0.0,0.0,0.0)).matrix
                     var testOffsetRight = Transform(translation: SIMD3<Float>(0.0,0.0,-0.0)).matrix
                 
                     // Update the joint entity to match the transform of the person's hand joint.
