@@ -17,7 +17,12 @@ struct StoryboardView: View {
   private var sceneNumberBinding: Binding<Int> {
     Binding(
       get: { appModel.sceneNumber },
-      set: { appModel.sceneNumber = $0 }
+      set: {
+        appModel.sceneNumber = $0
+
+        // Unset loaded scene.
+        loadedScene = nil
+      }
     )
   }
   @State private var showSaveAlert = false
@@ -50,12 +55,16 @@ struct StoryboardView: View {
             return
           }
 
-          loadedScene = filePath
-
           do {
             let data = try Data(contentsOf: filePath)
             appModel.shots = try JSONDecoder().decode(
               [ShotModel].self, from: data)
+
+            // Remember data file.
+            loadedScene = filePath
+
+            // Mark changes saved.
+            appModel.unsavedChanges = false
           } catch {
             print("Failed to decode scene! \(error)")
           }
@@ -72,7 +81,12 @@ struct StoryboardView: View {
 
       if let loadedScene = loadedScene {
         ShareLink("Share Scene", item: loadedScene)
-        
+          .disabled(appModel.unsavedChanges)
+
+        if appModel.unsavedChanges {
+          Text("Save changes before sharing!")
+        }
+
         Divider()
       }
 
@@ -96,6 +110,12 @@ struct StoryboardView: View {
 
           // Save.
           try encoding.write(to: filePath)
+
+          // Remember data file.
+          loadedScene = filePath
+
+          // Mark changes saved.
+          appModel.unsavedChanges = false
         } catch {
           print("Unable to encode! \(error)")
         }

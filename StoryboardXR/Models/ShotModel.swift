@@ -48,7 +48,7 @@ class ShotModel: Identifiable, Codable {
     let usedNames: Set = Set(
       appModel.shots.compactMap { shotModel in shotModel.name })
     return ShotName.allCases.filter { name in
-      name == currentShotName || !usedNames.contains(name)
+      name == currentShotName || !usedNames.contains(name) || name != .unnamed
     }
   }
 

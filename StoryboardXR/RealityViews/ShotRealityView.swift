@@ -151,8 +151,11 @@ struct ShotRealityView: View {
         shotModel.transform.translation = newPosition
         rootEntity.position = newPosition
       }).onEnded({ _ in
-        // Reset the initial position value for the next darg.
+        // Reset the initial position value for the next drag.
         initialPosition = nil
+
+        // Mark unsaved changes.
+        appModel.unsavedChanges = true
       })
   }
 
@@ -189,7 +192,11 @@ struct ShotRealityView: View {
         shotModel.transform.rotation = newRotation
         rootEntity.transform.rotation = newRotation
       }).onEnded({ _ in
+        // Reset the initial rotation value for the next rotation.
         initialRotation = nil
+
+        // Mark unsaved changes.
+        appModel.unsavedChanges = true
       })
   }
 
@@ -225,6 +232,9 @@ struct ShotRealityView: View {
       }).onEnded({ _ in
         // Reset the initial scale for the next scale.
         initialScale = nil
+
+        // Mark unsaved changes.
+        appModel.unsavedChanges = true
       })
   }
 }
