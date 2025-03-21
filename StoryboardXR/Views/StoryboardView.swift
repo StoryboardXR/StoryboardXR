@@ -27,6 +27,8 @@ struct StoryboardView: View {
   }
   @State private var showSaveAlert = false
   @State private var loadedScene: URL?
+  @State private var blockerName: String = ""
+  @State private var showBlockerNamingAlert = false
 
   var body: some View {
     VStack {
@@ -44,24 +46,42 @@ struct StoryboardView: View {
         Button("Load") {
           let documentsDirectory = FileManager.default.urls(
             for: .documentDirectory, in: .userDomainMask)
-          let filePath = documentsDirectory.first?.appendingPathComponent(
-            "Scene_\(appModel.sceneNumber).json")
+          
+          let shotFilePath = documentsDirectory.first?.appendingPathComponent(
+            "Scene_\(appModel.sceneNumber)/\(SHOT_FRAME_ENTITY_NAME).json")
+          
+          let blockerFilePath = documentsDirectory.first?.appendingPathComponent(
+            "Blocker_\(appModel.sceneNumber)/\(BLOCKER_ENTITY_NAME).json")
 
-          guard let filePath,
+          guard let shotFilePath,
             FileManager.default.fileExists(
-              atPath: filePath.path(percentEncoded: true))
+              atPath: shotFilePath.path(percentEncoded: true))
           else {
             print("Scene slot has not been used yet!")
             return
           }
-
+          
+          guard let blockerFilePath,
+            FileManager.default.fileExists(
+              atPath: blockerFilePath.path(percentEncoded: true))
+          else {
+            print("Scene slot has not been used with blockers yet!")
+            return
+          }
+          // If you want to use this you should figure out if it works with
+          // the nested folders for blockers and shots and if not, combine them
+          
           do {
-            let data = try Data(contentsOf: filePath)
+            let shotData = try Data(contentsOf: shotFilePath)
             appModel.shots = try JSONDecoder().decode(
-              [ShotModel].self, from: data)
+              [ShotModel].self, from: shotData)
+            
+            let blockerData = try Data(contentsOf: blockerFilePath)
+            appModel.blockers = try JSONDecoder().decode(
+              [BlockerModel].self, from: blockerData)
 
             // Remember data file.
-            loadedScene = filePath
+            loadedScene = shotFilePath
 
             // Mark changes saved.
             appModel.unsavedChanges = false
@@ -75,6 +95,11 @@ struct StoryboardView: View {
 
       Button("Add Frame") {
         appModel.shots.append(ShotModel(appModel: appModel))
+      }
+      
+      // New "Add Model" button that shows an options dialog
+      Button("Add Blocker") {
+        showBlockerNamingAlert = true
       }
 
       Divider()
@@ -100,19 +125,26 @@ struct StoryboardView: View {
       Button("Save", role: .destructive) {
         do {
           // Encode.
-          let encoding = try JSONEncoder().encode(appModel.shots)
+          let encodingShots = try JSONEncoder().encode(appModel.shots)
+          let encodingBlockers = try JSONEncoder().encode(appModel.blockers)
+          
 
           // Get save location.
           let documentsDirectory = FileManager.default.urls(
             for: .documentDirectory, in: .userDomainMask)[0]
-          let filePath = documentsDirectory.appendingPathComponent(
-            "Scene_\(appModel.sceneNumber).json")
+          
+          let shotFilePath = documentsDirectory.appendingPathComponent(
+            "Scene_\(appModel.sceneNumber)/\(SHOT_FRAME_ENTITY_NAME).json")
+          
+          let blockerFilePath = documentsDirectory.appendingPathComponent(
+            "Blocker_\(appModel.sceneNumber)/\(BLOCKER_ENTITY_NAME).json")
 
           // Save.
-          try encoding.write(to: filePath)
+          try encodingShots.write(to: shotFilePath)
+          try encodingBlockers.write(to: blockerFilePath) // Might mess up shot encoding so i'm not messing with it yet
 
           // Remember data file.
-          loadedScene = filePath
+          loadedScene = shotFilePath
 
           // Mark changes saved.
           appModel.unsavedChanges = false
@@ -124,6 +156,15 @@ struct StoryboardView: View {
       Button("Cancel", role: .cancel) {}
     } message: {
       Text("Saving a scene overwrites any scene with the same number.")
+    }
+    .alert("Name Your Blocker", isPresented: $showBlockerNamingAlert) {
+      TextField("Blocker Name", text: $blockerName)
+      Button("Add") {
+        guard !blockerName.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        appModel.blockers.append(BlockerModel(appModel: appModel, name: blockerName))
+        blockerName = ""
+      }
+      Button("Cancel", role: .cancel) {}
     }
     .onAppear {
       Task {

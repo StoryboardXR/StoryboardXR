@@ -29,10 +29,12 @@ class AppModel {
   
   // MARK: World position tracking.
   var shotFrameEntities = Set<Entity>()
+  var blockerEntities = Set<ModelEntity>()
 
   // MARK: Scene state
   var unsavedChanges = true
   var sceneNumber = 1
   var shots: [ShotModel] = []
+  var blockers: [BlockerModel] = []
   var originEntity: Entity?
 }

@@ -28,7 +28,6 @@ struct StoryboardXRApp: App {
     }
 
     ImmersiveSpace(id: STORYBOARD_SPACE_ID) {
-
       OriginRealityView().environment(appModel)
       HandTrackingRealityView().environment(appModel)
       if appModel.originEntity != nil {
