@@ -28,7 +28,7 @@ struct OriginRealityView: View {
         assertionFailure("Failed to load origin model")
         return
       }
-
+      
       // Add to the scene.
       content.add(loadedOriginEntity)
 
