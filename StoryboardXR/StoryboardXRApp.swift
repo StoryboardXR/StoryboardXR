@@ -34,6 +34,9 @@ struct StoryboardXRApp: App {
         ForEach(appModel.shots) { shotModel in
           ShotRealityView(shotModel: shotModel).environment(appModel)
         }
+        ForEach(appModel.blockers) { blockerModel in
+          BlockingRealityView(blockerModel: blockerModel).environment(appModel)
+        }
       }
     }
     .immersionStyle(selection: .constant(.mixed), in: .mixed)
