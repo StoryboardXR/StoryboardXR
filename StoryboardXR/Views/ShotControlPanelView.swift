@@ -17,11 +17,11 @@ struct ShotControlPanelView: View {
   private var rotationBinding: Binding<simd_double3> {
     Binding(
       get: {
-        Rotation3D(shotModel.transform.rotation).eulerAngles(order: .xyz).angles
+        Rotation3D(shotModel.transform.rotation).eulerAngles(order: .xyz).angles * 180 / .pi
       },
       set: {
         shotModel.transform.rotation = simd_quatf(
-          Rotation3D(eulerAngles: EulerAngles(angles: $0, order: .xyz)))
+          Rotation3D(eulerAngles: EulerAngles(angles: $0 * .pi / 180, order: .xyz)))
       }
     )
   }
@@ -49,15 +49,15 @@ struct ShotControlPanelView: View {
               .gridColumnAlignment(.trailing)
             TextField(
               "X", value: $shotModel.transform.translation.x,
-              format: FloatingPointFormatStyle()
+              format: .number.precision(.fractionLength(2))
             )
             TextField(
               "Y", value: $shotModel.transform.translation.y,
-              format: FloatingPointFormatStyle()
+              format: .number.precision(.fractionLength(2))
             )
             TextField(
               "Z", value: $shotModel.transform.translation.z,
-              format: FloatingPointFormatStyle()
+              format: .number.precision(.fractionLength(2))
             )
           }
 
@@ -67,15 +67,15 @@ struct ShotControlPanelView: View {
               .gridColumnAlignment(.trailing)
             TextField(
               "X", value: rotationBinding.x,
-              format: FloatingPointFormatStyle()
+              format: .number.precision(.fractionLength(1))
             )
             TextField(
               "Y", value: rotationBinding.y,
-              format: FloatingPointFormatStyle()
+              format: .number.precision(.fractionLength(1))
             )
             TextField(
               "Z", value: rotationBinding.z,
-              format: FloatingPointFormatStyle()
+              format: .number.precision(.fractionLength(1))
             )
           }
 
@@ -85,15 +85,15 @@ struct ShotControlPanelView: View {
               .gridColumnAlignment(.trailing)
             TextField(
               "X", value: $shotModel.transform.scale.x,
-              format: FloatingPointFormatStyle()
+              format: .number.precision(.fractionLength(2))
             )
             TextField(
               "Y", value: $shotModel.transform.scale.y,
-              format: FloatingPointFormatStyle()
+              format: .number.precision(.fractionLength(2))
             )
             TextField(
               "Z", value: $shotModel.transform.scale.z,
-              format: FloatingPointFormatStyle()
+              format: .number.precision(.fractionLength(2))
             )
           }
         }
