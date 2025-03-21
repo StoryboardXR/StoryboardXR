@@ -25,8 +25,8 @@ struct BlockingRealityView: View {
     RealityView { content, attachments in
       // Load the entity either preexisting in assets or imported
       guard
-        let blockerEntity = try? await ModelEntity(
-          named: blockerModel.name, in: realityKitContentBundle)
+        let blockerEntity = try? await Entity(
+          named: BLOCKER_ENTITY_NAME, in: realityKitContentBundle)
       else {
         assertionFailure("Failed to load blocker model")
         return
