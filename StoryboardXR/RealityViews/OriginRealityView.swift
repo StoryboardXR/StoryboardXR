@@ -56,7 +56,9 @@ struct OriginRealityView: View {
           for shotFrameEntity in appModel.shotFrameEntities {
             // Record parent to return to later.
             if shotFrameEntityParent == nil {
-              shotFrameEntityParent = shotFrameEntity.parent!
+              if let shotFrameEntityParent = shotFrameEntity.parent {
+                self.shotFrameEntityParent = shotFrameEntityParent
+              }
             }
 
             // Parent it.

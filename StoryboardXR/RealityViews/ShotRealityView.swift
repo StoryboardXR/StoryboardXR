@@ -69,16 +69,16 @@ struct ShotRealityView: View {
               deviceTransform.translation + (forwardVector * 0.6)
               + (downVector * 0.2)
 
-            // Create this transform.
-            var modifiedTransform = deviceTransform
-            modifiedTransform.translation = offsetPosition
+            // Create offsetted transform.
+            var offsettedDeviceTransform = deviceTransform
+            offsettedDeviceTransform.translation = offsetPosition
 
             // Apply it to the shot frame.
             shotFrameEntity.setTransformMatrix(
-              modifiedTransform.matrix, relativeTo: appModel.originEntity)
-
-            // Update the shot model.
-            shotModel.transform = modifiedTransform
+              offsettedDeviceTransform.matrix, relativeTo: nil)
+            
+            // Compute and save the transform relative to the origin.
+            shotModel.transform = Transform(matrix: shotFrameEntity.transformMatrix(relativeTo: appModel.originEntity))
           } catch {
             print("Error setting shot frame position: \(error)")
           }
@@ -87,7 +87,7 @@ struct ShotRealityView: View {
         // Mark has been initialized.
         shotModel.needInitialization = false
       } else {
-        shotFrameEntity.transform = shotModel.transform
+        shotFrameEntity.setTransformMatrix(shotModel.transform.matrix, relativeTo: appModel.originEntity)
       }
 
       // Add the shot frame to the world.

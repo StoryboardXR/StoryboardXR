@@ -38,6 +38,7 @@ class BlockerModel: Identifiable, Codable {
 
   /// Values to be encoded.
   enum CodingKeys: String, CodingKey {
+    case _id = "id"
     case _name = "name"
     case _needInitialization = "needInitialization"
     case _orientationLock = "orientationLock"
@@ -47,10 +48,9 @@ class BlockerModel: Identifiable, Codable {
   
   /// Decoder. Required to add in appModel reference after
   required init(from decoder: any Decoder) throws {
-    id = UUID()
-    
     let values = try decoder.container(keyedBy: CodingKeys.self)
     
+    id = try values.decode(UUID.self, forKey: ._id)
     name = try values.decode(String.self, forKey: ._name)
     needInitialization = try values.decode(Bool.self, forKey: ._needInitialization)
     orientationLock = try values.decode(Bool.self, forKey: ._orientationLock)
@@ -61,6 +61,7 @@ class BlockerModel: Identifiable, Codable {
   /// Encode model.
   func encoder(to encoder: Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
+    try container.encode(id, forKey: ._id)
     try container.encode(name, forKey: ._name)
     try container.encode(needInitialization, forKey: ._needInitialization)
     try container.encode(orientationLock, forKey: ._orientationLock)
